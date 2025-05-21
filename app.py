@@ -1,7 +1,11 @@
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 from flask import render_template
+from app import create_app
 
-app = Flask(__name__)
+db = SQLAlchemy()
+
+app = create_app()
 
 @app.route("/")
 def index():
