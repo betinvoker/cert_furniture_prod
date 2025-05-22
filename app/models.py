@@ -138,7 +138,7 @@ class Request(db.Model):
     status = db.Column(db.String(1), default='I', doc='Статус (I/U/D)')
     id_worker = db.Column(db.Integer, db.ForeignKey('worker.id'), doc='ID Worker')
     id_object = db.Column(db.Integer, db.ForeignKey('object.id'), doc='ID Object')
-    status_request = db.Column(db.String(1), default='I', doc='Статус (Зарегистрирована/ В работе / Отклонена/ Выполнена)')
+    status_request = db.Column(db.String(16), default='Зарегистрирована', doc='Статус (Зарегистрирована/ В работе / Отклонена/ Выполнена)')
     link_material = db.Column(db.String(4096), nullable=False, doc='Документация изготовителя')
     okved = db.Column(db.String(6), nullable=True, doc='ОКВЭД')
     id_bank = db.Column(db.Integer, db.ForeignKey('bank.id'), doc='ID Bank')
@@ -152,6 +152,22 @@ class Request(db.Model):
     def __repr__(self):
         return f"<Request {self.id}, {self.name}>"
 
-# class Expertise(db.Model):
-#     __tablename__ = 'expertise'
-#     pass
+class Expertise(db.Model):
+    __tablename__ = 'expertise'
+    id = db.Column(db.Integer, primary_key=True, doc='Первичный ключ')
+    date_create = db.Column(db.DateTime, default=datetime.now, doc='Дата создания/изменения статуса')
+    status = db.Column(db.String(1), default='I', doc='Статус (I/U/D)')
+    id_worker = db.Column(db.Integer, db.ForeignKey('worker.id'), doc='ID Worker')
+    id_request = db.Column(db.Integer, db.ForeignKey('request.id'), doc='ID Request')
+    status_request = db.Column(db.String(9), default='Создана', doc='Статус (Создана/В работе/Отклонена/Выполнена)')
+    link_inference = db.Column(db.String(4096), nullable=False, doc='Ссылка на нормативные документы')
+    id_security_requirements = db.Column(db.Integer, db.ForeignKey('security_requirements.id'), doc='ID Security_requirements')
+    id_regulatory_document = db.Column(db.Integer, db.ForeignKey('regulatory_document.id'), doc='ID Regulatory_document')
+  
+    request = db.relationship("Worker", backref=db.backref("worker", uselist=False))
+    request = db.relationship("Request", backref=db.backref("request", uselist=False))
+    request = db.relationship("Security_requirements", backref=db.backref("security_requirements", uselist=False))
+    request = db.relationship("Regulatory_document", backref=db.backref("regulatory_document", uselist=False))
+
+    def __repr__(self):
+        return f"<Expertise {self.id}, {self.id_worker}, {self.id_request}>"
