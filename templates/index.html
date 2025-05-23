@@ -1,5 +1,10 @@
 {% extends 'base.html' %}
 
 {% block top %} 
-    <h1>Заголовок страницы</h1>
+    <h1>Список пользователей:</h1>
+    <ul>
+        {% for customer in customers %}
+            <li>{{ customer.last_name }}</li>
+        {% endfor %}
+    </ul>
 {% endblock %}

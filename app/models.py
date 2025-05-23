@@ -1,7 +1,12 @@
 from app import db
 from datetime import datetime
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
 
-class Customer(db.Model):
+db = SQLAlchemy()
+
+class Customer(UserMixin, db.Model):
     __tablename__ = 'customer'
     id = db.Column(db.Integer, primary_key=True, doc='Первичный ключ')
     date_create = db.Column(db.DateTime, default=datetime.now, doc='Дата создания/изменения статуса')
@@ -10,9 +15,15 @@ class Customer(db.Model):
     first_name = db.Column(db.String(1024), nullable=False, doc='Имя')
     patronymic = db.Column(db.String(1024), nullable=True, doc='Отчество')
     login = db.Column(db.String(129), unique=True, doc='Login')
-    password = db.Column(db.String(256), nullable=False, doc='Password')
+    password_hash = db.Column(db.String(256), nullable=False, doc='Password')
     phone = db.Column(db.String(12), nullable=False, doc='Номер телефона')
     email = db.Column(db.String(1024), nullable=True, doc='Электронная почта')
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
         return f"<Customer {self.id}, {self.login}, {self.last_name}, {self.first_name}>"
@@ -50,8 +61,8 @@ class Bank(db.Model):
     def __repr__(self):
         return f"<Bank {self.id}, {self.name}, {self.account}, {self.okved}>"
     
-class Object(db.Model):
-    __tablename__ = 'object'
+class Entity(db.Model):
+    __tablename__ = 'entity'
     id = db.Column(db.Integer, primary_key=True, doc='Первичный ключ')
     date_create = db.Column(db.DateTime, default=datetime.now, doc='Дата создания/изменения статуса')
     status = db.Column(db.String(1), default='I', doc='Статус (I/U/D)')
@@ -61,33 +72,33 @@ class Object(db.Model):
     request = db.relationship("Organization", backref=db.backref("organization", uselist=False))
 
     def __repr__(self):
-        return f"<Bank {self.id}, {self.name}>"
+        return f"<Entity {self.id}, {self.name}>"
 
-class Attribute_object(db.Model):
-    __tablename__ = 'attribute_object'
+class Attribute_entity(db.Model):
+    __tablename__ = 'attribute_entity'
     id = db.Column(db.Integer, primary_key=True, doc='Первичный ключ')
     date_create = db.Column(db.DateTime, default=datetime.now, doc='Дата создания/изменения статуса')
     status = db.Column(db.String(1), default='I', doc='Статус (I/U/D)')
-    id_object = db.Column(db.Integer, db.ForeignKey('object.id'), doc='ID Object')
+    id_entity = db.Column(db.Integer, db.ForeignKey('entity.id'), doc='ID Entity')
     description = db.Column(db.String(2048), nullable=False, doc='Описание технической характеристики')
 
-    request = db.relationship("Object", backref=db.backref("object", uselist=False))
+    request = db.relationship("Entity", backref=db.backref("Entity", uselist=False))
 
     def __repr__(self):
-        return f"<Attribute_object {self.id}, {self.id_object}>"
+        return f"<Attribute_entity {self.id}, {self.id_entity}>"
     
-class Picture_object(db.Model):
-    __tablename__ = 'picture_object'
+class Picture_entity(db.Model):
+    __tablename__ = 'picture_entity'
     id = db.Column(db.Integer, primary_key=True, doc='Первичный ключ')
     date_create = db.Column(db.DateTime, default=datetime.now, doc='Дата создания/изменения статуса')
     status = db.Column(db.String(1), default='I', doc='Статус (I/U/D)')
-    id_object = db.Column(db.Integer, db.ForeignKey('object.id'), doc='ID Object')
+    id_entity = db.Column(db.Integer, db.ForeignKey('entity.id'), doc='ID Entity')
     link_picture = db.Column(db.String(2048), nullable=False, doc='Ссылка на изображение объекта')
 
-    request = db.relationship("Picture_object", backref=db.backref("object", uselist=False))
+    request = db.relationship("Entity", backref=db.backref("entity", uselist=False))
 
     def __repr__(self):
-        return f"<Picture_object {self.id}, {self.id_object}>"
+        return f"<Picture_entity {self.id}, {self.id_entity}>"
     
 class Regulatory_document(db.Model):
     __tablename__ = 'regulatory_document'
@@ -137,7 +148,7 @@ class Request(db.Model):
     date_create = db.Column(db.DateTime, default=datetime.now, doc='Дата создания/изменения статуса')
     status = db.Column(db.String(1), default='I', doc='Статус (I/U/D)')
     id_worker = db.Column(db.Integer, db.ForeignKey('worker.id'), doc='ID Worker')
-    id_object = db.Column(db.Integer, db.ForeignKey('object.id'), doc='ID Object')
+    id_entity = db.Column(db.Integer, db.ForeignKey('entity.id'), doc='ID Entity')
     status_request = db.Column(db.String(16), default='Зарегистрирована', doc='Статус (Зарегистрирована/ В работе / Отклонена/ Выполнена)')
     link_material = db.Column(db.String(4096), nullable=False, doc='Документация изготовителя')
     okved = db.Column(db.String(6), nullable=True, doc='ОКВЭД')
@@ -146,7 +157,7 @@ class Request(db.Model):
     phone = db.Column(db.String(12), nullable=False, doc='Номер телефона для обратной связи')
 
     request = db.relationship("Worker", backref=db.backref("worker", uselist=False))
-    request = db.relationship("Object", backref=db.backref("object", uselist=False))
+    request = db.relationship("Entity", backref=db.backref("entity", uselist=False))
     request = db.relationship("Bank", backref=db.backref("bank", uselist=False))
 
     def __repr__(self):
