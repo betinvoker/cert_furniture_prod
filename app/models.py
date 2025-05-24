@@ -125,7 +125,7 @@ class Security_requirements(db.Model):
     def __repr__(self):
         return f"<Security_requirements {self.id}, {self.name}>"
 
-class Worker(db.Model):
+class Worker(UserMixin, db.Model):
     __tablename__ = 'worker'
     id = db.Column(db.Integer, primary_key=True, doc='Первичный ключ')
     date_create = db.Column(db.DateTime, default=datetime.now, doc='Дата создания/изменения статуса')
@@ -134,10 +134,16 @@ class Worker(db.Model):
     first_name = db.Column(db.String(1024), nullable=False, doc='Имя')
     patronymic = db.Column(db.String(1024), nullable=True, doc='Отчество')
     login = db.Column(db.String(129), unique=True, doc='Login')
-    password = db.Column(db.String(256), nullable=False, doc='Password')
+    password_hash = db.Column(db.String(256), nullable=False, doc='Password')
     phone = db.Column(db.String(12), nullable=False, doc='Номер телефона')
     email = db.Column(db.String(1024), nullable=True, doc='Электронная почта')
     position = db.Column(db.String(256), nullable=False, doc='Должность')
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
         return f"<Worker {self.id}, {self.login}, {self.position}, {self.last_name}, {self.first_name}>"

@@ -1,8 +1,9 @@
 from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_sqlalchemy import SQLAlchemy
-from app.models import db, Customer
+from app.models import db, Customer, Worker
 from config import Config
+from flask import session
 # from app import create_app
 
 # app = create_app() # Запуск скрипта создания изменения в БД в соответствии с моделями (app.models)
@@ -18,8 +19,14 @@ login_manager.login_view = 'login'
 login_manager.init_app(app)
 
 @login_manager.user_loader
-def load_customer(user_id):
-    return Customer.query.get(int(user_id))
+def load_user(user_id):
+    user_type = session.get('user_type')
+
+    if user_type == 'customer':
+        return Customer.query.get(int(user_id))
+    elif user_type == 'worker':
+        return Worker.query.get(int(user_id))
+    return None
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -33,7 +40,7 @@ def register():
         phone = request.form['phone']
         email = request.form['email']
 
-        if Customer.query.filter_by(login=login).first():
+        if Customer.query.filter_by(login=login).first() | Worker.query.filter_by(login=login).first():
             flash('Пользователь уже существует')
             return redirect(url_for('register'))
 
@@ -49,13 +56,23 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        login = request.form['login']
+        session['login'] = request.form['login']
         password = request.form['password']
+        session['user_type'] = request.form['role']
 
-        customer = Customer.query.filter_by(login=login).first()
-        if customer and customer.check_password(password):
-            login_user(customer)
-            return redirect(url_for('protected'))
+        if session['user_type'] == 'customer':
+            customer = Customer.query.filter_by(login=session['login']).first()
+
+            if customer and customer.check_password(password):
+                login_user(customer)
+                return redirect(url_for('index'))
+            
+        if session['user_type'] == 'worker':
+            worker = Worker.query.filter_by(login=session['login']).first()
+            
+            if worker and worker.check_password(password):
+                login_user(worker)
+                return redirect(url_for('index'))
 
         flash('Неверные логин или пароль')
         return redirect(url_for('login'))
@@ -68,15 +85,17 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-@app.route('/protected')
-@login_required
-def protected():
-    return f'Привет, {current_user.login}! Это защищённая страница.'
-
 @app.route("/")
 def index():
-    customers = Customer.query.all()
-    return render_template('index.html', customers=customers)
+    if session['user_type'] == 'customer':
+        customer = Customer.query.filter_by(login=session['login']).first()
+        return render_template('index.html', user=customer)
+    
+    if session['user_type'] == 'worker':
+        worker = Worker.query.filter_by(login=session['login']).first()
+        return render_template('index.html', user=worker)
+    
+    return render_template('index.html')
 
 if __name__ == "__main__":
     app.run(debug=True)
