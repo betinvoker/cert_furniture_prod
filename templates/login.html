@@ -1,11 +1,52 @@
-<h2>Вход</h2>
-<form method="post">
-    <input name="login" type="text" placeholder="Логин"><br>
-    <input name="password" type="password" placeholder="Пароль"><br>
-    <select name="role">
-        <option value="customer">Клиент</option>
-        <option value="worker">Работник</option>
-    </select><br>
-    <button type="submit">Войти</button>
-</form>
-<a href="/register">Нет аккаунта?</a>
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+        <script src="{{url_for('static', filename='js/bootstrap.bundle.min.js')}}"></script>
+        <title>{% block title %}Авторизация{% endblock %}</title>
+    </head>
+    <body>
+        <div class="container text-center">
+            <div class="row justify-content-md-center g-4 p-1">
+                <div class="col-sm-4">
+                    <h2 class="card-title m-4">Авторизация</h2>
+                    <form method="post">
+
+                        <div class="mb-2 row justify-content-md-center">
+                            <label for="staticLogin" class="col-sm-2 col-form-label">Логин</label>
+                            <div class="col-sm-7">
+                                <input type="text" class="form-control" id="staticLogin" name="login">
+                            </div>
+                        </div>
+
+                        <div class="mb-2 row justify-content-md-center">
+                            <label for="staticPassword" class="col-sm-2 col-form-label">Пароль</label>
+                            <div class="col-sm-7">
+                                <input type="password" class="form-control" id="staticPassword" name="password">
+                            </div>
+                        </div>
+
+                        <div class="mb-2 row justify-content-md-center">
+                            <label for="selectRole" class="col-sm-2 col-form-label">Роль</label>
+                            <div class="col-sm-7">
+                                <select name="role" id="selectRole" class="form-select" aria-label="Роль">
+                                    <option value="customer" selected>Клиент</option>
+                                    <option value="worker">Работник</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 col-9 mx-auto m-4">
+                            <button type="submit" class="btn btn-primary">Войти</button>
+                            <a href="/register" class="nav-link">Нет аккаунта?</a>
+                        </div>
+                        
+                    </form>
+                </div>
+                
+            </div>
+        </div>
+    </body>
+</html>

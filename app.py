@@ -65,14 +65,14 @@ def login():
 
             if customer and customer.check_password(password):
                 login_user(customer)
-                return redirect(url_for('index'))
+                return redirect(url_for('profile', login=session['login']))
             
         if session['user_type'] == 'worker':
             worker = Worker.query.filter_by(login=session['login']).first()
             
             if worker and worker.check_password(password):
                 login_user(worker)
-                return redirect(url_for('index'))
+                return redirect(url_for('profile_worker', login=session['login']))
 
         flash('Неверные логин или пароль')
         return redirect(url_for('login'))
@@ -87,15 +87,17 @@ def logout():
 
 @app.route("/")
 def index():
-    if session['user_type'] == 'customer':
-        customer = Customer.query.filter_by(login=session['login']).first()
-        return render_template('index.html', user=customer)
-    
-    if session['user_type'] == 'worker':
-        worker = Worker.query.filter_by(login=session['login']).first()
-        return render_template('index.html', user=worker)
-    
     return render_template('index.html')
+
+@app.route("/profile/<login>")
+def profile(login):
+    customer = Customer.query.filter_by(login=session['login']).first()
+    return render_template('profile.html', user=customer)
+
+@app.route("/worker/<login>")
+def profile_worker(login):
+    worker = Worker.query.filter_by(login=session['login']).first()
+    return render_template('profile_worker.html', user=worker)
 
 if __name__ == "__main__":
     app.run(debug=True)

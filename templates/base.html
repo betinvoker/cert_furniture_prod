@@ -17,13 +17,13 @@
           <div class="collapse navbar-collapse" id="navbarText">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
               <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="#">Home</a>
+                <a class="nav-link active" aria-current="page" href="#">Организации</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="#">Features</a>
+                <a class="nav-link" href="#">Объекты</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="#">Pricing</a>
+                <a class="nav-link" href="#">Заявки</a>
               </li>
             </ul>
             <span class="navbar-text">
@@ -31,7 +31,13 @@
             </span>
             <ul class="navbar-nav mb-2 mb-lg-0 ms-md-auto">
               <li class="nav-item">
-                <a class="nav-link" href="#" onclick="return false">{{user.login}}</a>
+                {% if session.user_type == 'customer' %}
+                <a class="nav-link" href="/profile/{{current_user.login}}">{{current_user.login}}</a>
+                {% endif %}
+
+                {% if session.user_type == 'worker' %}
+                <a class="nav-link" href="/worker/{{current_user.login}}">{{current_user.login}}</a>
+                {% endif %}
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="/logout">Выход</a>
