@@ -38,7 +38,7 @@ class Organization(db.Model):
     jur_address = db.Column(db.String(1024), nullable=False, doc='Юридический адрес')
     inn = db.Column(db.String(12), nullable=True, doc='ИНН')
     kpp = db.Column(db.String(9), nullable=True, doc='КПП')
-    egrul_egrip = db.Column(db.String(13), nullable=True, doc='ЕГРЮЛ или ЕГРИП')
+    egrul_egrip = db.Column(db.String(15), nullable=True, doc='ЕГРЮЛ или ЕГРИП')
     phone = db.Column(db.String(12), nullable=True, doc='Номер телефона')
     email = db.Column(db.String(1024), nullable=True, doc='Электронная почта')
 

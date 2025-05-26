@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_sqlalchemy import SQLAlchemy
-from app.models import db, Customer, Worker
+from app.models import db, Customer, Worker, Organization
 from config import Config
 from flask import session
 # from app import create_app
@@ -23,9 +23,9 @@ def load_user(user_id):
     user_type = session.get('user_type')
 
     if user_type == 'customer':
-        return Customer.query.get(int(user_id))
+        return db.session.get(Customer, int(user_id))
     elif user_type == 'worker':
-        return Worker.query.get(int(user_id))
+        return db.session.get(Worker, int(user_id))
     return None
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -98,6 +98,35 @@ def profile(login):
 def profile_worker(login):
     worker = Worker.query.filter_by(login=session['login']).first()
     return render_template('profile_worker.html', user=worker)
+
+@app.route("/myorganization/<login>")
+def my_organization(login):
+    customer = Customer.query.filter_by(login=session['login']).first()
+    organizations = Organization.query.filter_by(id_client=customer.id)
+    return render_template('my_organization.html', user=customer, organizations=organizations,)
+
+@app.route('/add_myorganization', methods=['POST'])
+def add_organization():
+    customer = Customer.query.filter_by(login=session['login']).first()
+
+    o_name = request.form['name']
+    o_jur_address = request.form['jur_address']
+    o_inn = request.form['inn']
+    o_kpp = request.form['kpp']
+    o_egrul_egrip = request.form['egrul_egrip']
+    o_phone = request.form['phone']
+    o_email = request.form['email']
+
+    try:
+        new_organization = Organization(id_client = customer.id, name = o_name, jur_address = o_jur_address, inn = o_inn, kpp = o_kpp, egrul_egrip = o_egrul_egrip, phone = o_phone, email = o_email)
+        db.session.add(new_organization)
+        db.session.commit()
+
+        flash("Организация добавлена!")
+        return redirect(url_for('my_organization'))
+    except Exception as e:
+        db.session.rollback()
+        return f"Ошибка записи: {e}", 500
 
 if __name__ == "__main__":
     app.run(debug=True)
