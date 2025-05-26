@@ -5,34 +5,55 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
         <script src="{{url_for('static', filename='js/bootstrap.bundle.min.js')}}"></script>
-        <title>Главная страница</title>
+        <title>{% block title %}{% endblock %}</title>
     </head>
     <body>
-        <nav class="navbar navbar-expand-lg bg-body-tertiary">
-            <div class="container-fluid">
-              <a class="navbar-brand" href="#">Navbar w/ text</a>
-              <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-              </button>
-              <div class="collapse navbar-collapse" id="navbarText">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                  <li class="nav-item">
-                    <a class="nav-link active" aria-current="page" href="#">Home</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="#">Features</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="#">Pricing</a>
-                  </li>
-                </ul>
-                <span class="navbar-text">
-                  Navbar text with an inline element
-                </span>
-              </div>
-            </div>
-          </nav>
+      <nav class="navbar navbar-expand-lg bg-body-tertiary">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="#">Navbar w/ text</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarText">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="/myorganization/{{current_user.login}}">Организации</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#">Объекты</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#">Заявки</a>
+              </li>
+            </ul>
+            <span class="navbar-text">
+              Navbar text with an inline element
+            </span>
+            <ul class="navbar-nav mb-2 mb-lg-0 ms-md-auto">
+              <li class="nav-item">
+                {% if session.user_type == 'customer' %}
+                <a class="nav-link" href="/profile/{{current_user.login}}">{{current_user.login}}</a>
+                {% endif %}
 
-        {% block title %}{% endblock %}
+                {% if session.user_type == 'worker' %}
+                <a class="nav-link" href="/worker/{{current_user.login}}">{{current_user.login}}</a>
+                {% endif %}
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/logout">Выход</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+
+      <div class="container">
+        {% block top %}{% endblock %}
+
+        {% block content %}{% endblock %}
+
+        {% block footer %}{% endblock %}
+      </div>
+       
     </body>
 </html>
