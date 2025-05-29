@@ -94,8 +94,16 @@
                 <td>{{organization.phone}}</td>
                 <td>{{organization.email}}</td>
 
-                <td><button type="button" class="btn btn-outline-success">Success</button></td>
-                <td><button type="button" class="btn btn-outline-danger">Danger</button></td>
+                <td>
+                    <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#exampleModalUpdate" data-id="{{organization.id}}" data-name="{{organization.name}}"
+                    data-jur_address="{{organization.jur_address}}" data-inn="{{organization.inn}}" data-kpp="{{organization.kpp}}" data-egrul_egrip="{{organization.egrul_egrip}}" 
+                    data-phone="{{organization.phone}}" data-email="{{organization.email}}">Изменить</button>
+                </td>
+                <td>
+                    <form action="{{ url_for('delete_organization', id=organization.id) }}" method="POST">
+                        <button type="submit" class="btn btn btn-outline-danger" onclick="return confirm('Вы уверены, что хотите удалить эту запись?')">Удалить</button>
+                    </form>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
