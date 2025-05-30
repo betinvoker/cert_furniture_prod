@@ -103,7 +103,8 @@ def profile_worker(login):
 def my_organization(login):
     customer = Customer.query.filter_by(login=session['login']).first()
     organizations = Organization.query.filter_by(id_client=customer.id)
-    return render_template('my_organization.html', user=customer, organizations=organizations,)
+
+    return render_template('my_organization.html', user=customer, organizations=organizations)
 
 @app.route("/add_myorganization", methods=['POST'])
 def add_organization():
@@ -128,55 +129,33 @@ def add_organization():
         db.session.rollback()
         return f"Ошибка записи: {e}", 500
 
+@app.route("/myorganization/update/<int:id>")
+def update_organization(id):
+    organization = Organization.query.get_or_404(id)
+    return render_template('update_organization.html', organization=organization)
 
-# @app.route("/myorganization/<int:id>/update")
-# def update_organization(id):
-#     id = request.form.get('id')
-#     organization = Organization.query.group_by(id)
+@app.route('/organization/update/<int:id>', methods=['POST'])
+def organization_update(id):
+    try:
+        organization = Organization.query.get(request.form['id'])
 
-#     return render_template('update_organization.html', organization=organization)
+        organization.name = request.form['name']
+        organization.jur_address = request.form['jur_address']
+        organization.inn = request.form['inn']
+        organization.kpp = request.form['kpp']
+        organization.egrul_egrip = request.form['egrul_egrip']
+        organization.phone = request.form['phone']
+        organization.email = request.form['email']
 
-# @app.route('/myorganization/<int:id>/update', methods=['POST'])
-# def update_organization(id):
-#     id = request.form.get('id')
-#     organization = Organization.query.get_or_404(id)
-    
-#     # Сохраняем старые значения для отображения в случае ошибки
-#     old_name = organization.name
-#     old_jur_address = organization.jur_address
-#     old_inn = organization.inn
-#     old_kpp = organization.kpp
-#     old_egrul_egrip = organization.egrul_egrip
-#     old_phone = organization.phone
-#     old_email = organization.email
-    
-#     try:
-#         organization.name = request.form.get('name')
-#         organization.jur_address = request.form.get('jur_address')
-#         organization.inn = request.form.get('inn')
-#         organization.kpp = request.form.get('kpp')
-#         organization.egrul_egrip = request.form.get('egrul_egrip')
-#         organization.phone = request.form.get('phone')
-#         organization.email = request.form.get('email')
+        db.session.commit()
 
-#         db.session.commit()
-#         flash('Изменения успешно сохранены!', 'success')
-#     except Exception as e:
-#         db.session.rollback()
-#         # Возвращаем старые значения при ошибке
-#         organization.title = old_name
-#         organization.description = old_jur_address
-#         organization.description = old_inn
-#         organization.description = old_kpp
-#         organization.description = old_egrul_egrip
-#         organization.description = old_phone
-#         organization.description = old_email
+        flash("Информация об организации обновлена!")
+        return redirect(url_for('my_organization', login=session['login']))
+    except Exception as e:
+        db.session.rollback()
+        return f"Ошибка записи: {e}", 500
 
-#         flash(f'Ошибка при сохранении: {str(e)}', 'danger')
-    
-#     return redirect(url_for('my_organization', login=session['login']))
-
-@app.route('/myorganization/<int:id>/delete', methods=['POST'])
+@app.route('/myorganization/delete/<int:id>', methods=['POST'])
 def delete_organization(id):
     organization = Organization.query.get_or_404(id)
     db.session.delete(organization)
