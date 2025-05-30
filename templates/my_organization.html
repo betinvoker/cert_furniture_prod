@@ -95,9 +95,7 @@
                 <td>{{organization.email}}</td>
 
                 <td>
-                    <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#exampleModalUpdate" data-id="{{organization.id}}" data-name="{{organization.name}}"
-                    data-jur_address="{{organization.jur_address}}" data-inn="{{organization.inn}}" data-kpp="{{organization.kpp}}" data-egrul_egrip="{{organization.egrul_egrip}}" 
-                    data-phone="{{organization.phone}}" data-email="{{organization.email}}">Изменить</button>
+                    <!-- <a type="button" class="btn btn-outline-success" href="{{ url_for('update_organization', organization.id) }}">Изменить</a> -->
                 </td>
                 <td>
                     <form action="{{ url_for('delete_organization', id=organization.id) }}" method="POST">

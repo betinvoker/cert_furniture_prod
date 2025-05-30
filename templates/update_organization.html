@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Изменение информации об организации {{organization.name}}{% endblock %}
+
+{% block content %}
+<div class="row" style="margin-top: 20px;">
+    <div class="col-md-12">
+        <form id="addFormOrganization" method="POST" action="/add_myorganization">
+            <div class="mb-3">
+                <label for="exampleInputName" class="form-label">Наименование организации</label>
+                <input type="text" class="form-control" name="name" id="exampleInputName" aria-describedby="nameHelp">
+                <div id="nameHelp" class="form-text">Вводится полное или сокращенное наименование организации.</div>
+            </div>
+            <div class="mb-3">
+                <label for="exampleInputJurAddress" class="form-label">Юридический адрес</label>
+                <input type="text" class="form-control" name="jur_address" id="exampleInputJurAddress" aria-describedby="juraddressHelp">
+                <div id="juraddressHelp" class="form-text">Вводится юридический адрес организации в формате: Почтовый индекс, Регион, Населеннвй пункт, улица/проспект/переулок, номер дома.</div>
+            </div>
+            <div class="mb-3">
+                <label for="exampleInputINN" class="form-label">ИНН</label>
+                <input type="number" class="form-control" name="inn" id="exampleInputINN" aria-describedby="innHelp" pattern="\d{12}" required>
+                <div id="innHelp" class="form-text">Для ЮЛ ИНН - 10 символов,для ИП и ФЛ - 12 символов.</div>
+            </div>
+            <div class="mb-3">
+                <label for="exampleInputKPP" class="form-label">КПП</label>
+                <input type="number" class="form-control" name="kpp" id="exampleInputKPP" aria-describedby="kppHelp" pattern="\d{9}" required>
+                <div id="kppHelp" class="form-text">КПП состоит из 9 символов.</div>
+            </div>
+            <div class="mb-3">
+                <label for="exampleInputEGRULEGRIP" class="form-label">ЕГРЮЛ или ЕГРИП</label>
+                <input type="number" class="form-control" name="egrul_egrip" id="exampleInputEGRULEGRIP" aria-describedby="egrulegripHelp" pattern="\d{15}" required>
+                <div id="egrulegripHelp" class="form-text">ЕГРЮЛ состоит из 13 символов, а ЕГРИП из 15 символов.</div>
+            </div>
+            <div class="mb-3">
+                <label for="exampleInputPassword1" class="form-label">Номер телефона</label>
+                <input type="number" class="form-control" name="phone" id="exampleInputPassword1" aria-describedby="phoneHelp" pattern="\d{12}" required>
+                <div id="phoneHelp" class="form-text">Пример: 79999999999</div>
+            </div>
+            <div class="mb-3">
+                <label for="exampleInputEmail" class="form-label">Электронная почта</label>
+                <input type="email" class="form-control" name="email" id="exampleInputEmail" aria-describedby="emailHelp">
+            <div id="emailHelp" class="form-text">Пример: welcome@welcome.com</div>
+            </div>
+                <div class="mb-3">
+                <button type="submit" class="btn btn-primary">Добавить</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
