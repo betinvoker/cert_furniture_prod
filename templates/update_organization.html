@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Изменение информации об организации {{organization.name}}{% endblock %}
+
+{% block top %}
+<h2 style="margin-top: 20px;">Изменение информации об организации: <strong>{{organization.name}}</strong></h2>
+{% endblock %}
+
+{% block content %}
+<form method="POST" action="{{ url_for('organization_update', id=organization.id) }}" style="margin-top: 20px;">
+    <div class="row justify-content-sm-end">
+        <div class="col-2 col-lg-1">
+            <button type="submit" class="btn btn-outline-success">Изменить</button>
+        </div>
+    </div>
+    <div class="row">
+        <input type="hidden" name="id" value="{{ organization.id }}">
+        <div class="col-md-12">
+            <label for="exampleInputName" class="form-label">Наименование организации</label>
+            <input type="text" class="form-control" name="name" id="exampleInputName" aria-describedby="nameHelp"  value="{{organization.name}}">
+            <div id="nameHelp" class="form-text">Вводится полное или сокращенное наименование организации.</div>
+        </div>
+        <div class="col-md-12 mt-1">
+            <label for="exampleInputJurAddress" class="form-label">Юридический адрес</label>
+            <input type="text" class="form-control" name="jur_address" id="exampleInputJurAddress" aria-describedby="juraddressHelp" value="{{organization.jur_address}}">
+            <div id="juraddressHelp" class="form-text">Вводится юридический адрес организации в формате: Почтовый индекс, Регион, Населеннвй пункт, улица/проспект/переулок, номер дома.</div>
+        </div>
+        <div class="col-12 col-sm-6 mt-1">
+            <label for="exampleInputINN" class="form-label">ИНН</label>
+            <input type="number" class="form-control" name="inn" id="exampleInputINN" aria-describedby="innHelp" pattern="\d{12}" value="{{organization.inn}}" required>
+            <div id="innHelp" class="form-text">Для ЮЛ ИНН - 10 символов,для ИП и ФЛ - 12 символов.</div>
+        </div>
+        <div class="col-12 col-md-6 mt-1">
+            <label for="exampleInputKPP" class="form-label">КПП</label>
+            <input type="number" class="form-control" name="kpp" id="exampleInputKPP" aria-describedby="kppHelp" pattern="\d{9}" value="{{organization.kpp}}" required>
+            <div id="kppHelp" class="form-text">КПП состоит из 9 символов.</div>
+        </div>
+        <div class="col-12 col-md-6 mt-1">
+            <label for="exampleInputEGRULEGRIP" class="form-label">ЕГРЮЛ или ЕГРИП</label>
+            <input type="number" class="form-control" name="egrul_egrip" id="exampleInputEGRULEGRIP" aria-describedby="egrulegripHelp" pattern="\d{15}" value="{{organization.egrul_egrip}}" required>
+            <div id="egrulegripHelp" class="form-text">ЕГРЮЛ состоит из 13 символов, а ЕГРИП из 15 символов.</div>
+        </div>
+        <div class="col-12 col-md-6 mt-1">
+            <label for="exampleInputPhone" class="form-label">Номер телефона</label>
+            <input type="number" class="form-control" name="phone" id="exampleInputPhone" aria-describedby="phoneHelp" pattern="\d{12}" value="{{organization.phone}}" required>
+            <div id="phoneHelp" class="form-text">Пример: 79999999999</div>
+        </div>
+        <div class="col-12 col-md-6 mt-1">
+            <label for="exampleInputEmail" class="form-label">Электронная почта</label>
+            <input type="email" class="form-control" name="email" id="exampleInputEmail" aria-describedby="emailHelp" value="{{organization.email}}">
+            <div id="emailHelp" class="form-text">Пример: welcome@welcome.com</div>
+        </div>
+    </div>
+</form>
+{% endblock %}

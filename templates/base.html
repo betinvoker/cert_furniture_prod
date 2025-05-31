@@ -4,7 +4,6 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-        <script src="{{url_for('static', filename='js/bootstrap.bundle.min.js')}}"></script>
         <title>{% block title %}{% endblock %}</title>
     </head>
     <body>
@@ -26,9 +25,6 @@
                 <a class="nav-link" href="#">Заявки</a>
               </li>
             </ul>
-            <span class="navbar-text">
-              Navbar text with an inline element
-            </span>
             <ul class="navbar-nav mb-2 mb-lg-0 ms-md-auto">
               <li class="nav-item">
                 {% if session.user_type == 'customer' %}
@@ -54,6 +50,7 @@
 
         {% block footer %}{% endblock %}
       </div>
-       
+      <script src="{{url_for('static', filename='js/bootstrap.bundle.min.js')}}"></script>
+      {% block script %}{% endblock %}
     </body>
 </html>

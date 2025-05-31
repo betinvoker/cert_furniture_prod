@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}#{{organization.id}} {{organization.name}}{% endblock %}
+
+{% block top %}
+<div class="row" style="margin-top: 20px;">
+    <div class="col-12">
+        <dl class="row">
+            <dd class="col-sm-12"><h2>{{organization.name}}</h2></dd>
+
+            <dt class="col-sm-2">Юридический адрес :</dt>
+            <dd class="col-sm-10">{{organization.jur_address}}</dd>
+
+            <dt class="col-sm-2">ИНН :</dt>
+            <dd class="col-sm-10">{{organization.inn}}</dd>
+
+            <dt class="col-sm-2">КПП :</dt>
+            <dd class="col-sm-10">{{organization.kpp}}</dd>
+
+            <dt class="col-sm-2">ЕГРЮЛ/ЕГРИП :</dt>
+            <dd class="col-sm-10">{{organization.egrul_egrip}}</dd>
+
+            <dt class="col-sm-2">Телефон :</dt>
+            <dd class="col-sm-10">{{organization.phone}}</dd>
+
+            <dt class="col-sm-2">Email :</dt>
+            <dd class="col-sm-10">{{organization.email}}</dd>
+        </dl>
+
+        <p class="card-text"><small class="text-muted">Дата добавления: {{organization.date_create.strftime('%d.%m.%Y')}}</small></p>
+    </div> 
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row" style="margin-top: 20px;">
+    {% for entity in entities %}
+    <div class="card mt-1">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-sm-7 col-md-10">
+                    <h5 class="card-title">#{{entity.id}} {{entity.name}}</h5>
+                    <p><strong>Характеристики</strong></p>
+                </div>
+                <div class="col-sm-5 col-md-2">
+                    <button type="button" class="btn btn-outline-primary open-modal" data-bs-toggle="modal" data-bs-target="#exampleModal" name="btnNewAttribute" data-id="{{ entity.id }}">Дополнить описание</button>
+                </div>
+            </div>
+            <div class="col-12">
+                <dl class="row">
+                    {% for item in attribute_entities %}
+                    {% if item.id_entity == entity.id %}
+                    <dt class="col-sm-2">{{item.name_attribute}} :</dt>
+                    <dd class="col-sm-4">{{item.description}}</dd>
+                    {% endif %}
+                    {% else %}
+                    <dt class="col-sm-2">Характеристика :</dt>
+                    <dd class="col-sm-5">Нет характеристик.</dd>
+                    {% endfor %}
+                </dl>
+                <p class="card-text"><small class="text-muted">Дата добавления: {{organization.date_create.strftime('%d.%m.%Y')}}</small></p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Добавить новую характеристику для объекта</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addFormOrganization" method="POST" action="{{ url_for('add_attribute_entity', id=organization.id) }}">
+                    <input type="hidden" name="id_entity" id="id_entity">
+                    <div class="mb-3">
+                        <label for="exampleInputNameAttribute" class="form-label">Наименование характеристики</label>
+                        <input type="text" class="form-control" name="name_attribute" id="exampleInputNameAttribute" aria-describedby="nameAttributeHelp">
+                        <div id="nameAttributeHelp" class="form-text">Вводится полное или сокращенное наименование характеристики объекта.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="exampleFormControlTextareaDescription" class="form-label">Описание характеристики</label>
+                        <textarea class="form-control" name="description" id="exampleFormControlTextareaDescription" aria-describedby="descriptionHelp" rows="3"></textarea>
+                        <div id="descriptionHelp" class="form-text">Вводится подробное описание характеристики объекта (максимум 2048 символов).</div>
+                    </div>
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-primary">Добавить</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+document.querySelectorAll('.open-modal').forEach(button => {
+    button.addEventListener('click', function() {
+        // Получаем данные из data-атрибутов
+        const identity = this.dataset.id;
+        // Находим элементы модального окна
+        const id_entity = document.getElementById('id_entity');
+        // Заполняем модальное окно
+        id_entity.value = identity;
+    });
+});
+</script>
+{% endblock %}

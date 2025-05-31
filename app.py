@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_sqlalchemy import SQLAlchemy
-from app.models import db, Customer, Worker, Organization
+from app.models import db, Customer, Worker, Organization, Entity, Attribute_entity
 from config import Config
 from flask import session
 # from app import create_app
@@ -40,7 +40,7 @@ def register():
         phone = request.form['phone']
         email = request.form['email']
 
-        if Customer.query.filter_by(login=login).first() | Worker.query.filter_by(login=login).first():
+        if Customer.query.filter_by(login=login).first():
             flash('Пользователь уже существует')
             return redirect(url_for('register'))
 
@@ -103,9 +103,10 @@ def profile_worker(login):
 def my_organization(login):
     customer = Customer.query.filter_by(login=session['login']).first()
     organizations = Organization.query.filter_by(id_client=customer.id)
-    return render_template('my_organization.html', user=customer, organizations=organizations,)
 
-@app.route('/add_myorganization', methods=['POST'])
+    return render_template('my_organization.html', user=customer, organizations=organizations)
+
+@app.route("/add_myorganization", methods=['POST'])
 def add_organization():
     customer = Customer.query.filter_by(login=session['login']).first()
 
@@ -123,7 +124,70 @@ def add_organization():
         db.session.commit()
 
         flash("Организация добавлена!")
-        return redirect(url_for('my_organization'))
+        return redirect(url_for('my_organization', login=session['login']))
+    except Exception as e:
+        db.session.rollback()
+        return f"Ошибка записи: {e}", 500
+
+@app.route("/myorganization/update/<int:id>")
+def update_organization(id):
+    organization = Organization.query.get_or_404(id)
+    return render_template('update_organization.html', organization=organization)
+
+@app.route('/organization/update/<int:id>', methods=['POST'])
+def organization_update(id):
+    try:
+        organization = Organization.query.get(request.form['id'])
+
+        organization.name = request.form['name']
+        organization.jur_address = request.form['jur_address']
+        organization.inn = request.form['inn']
+        organization.kpp = request.form['kpp']
+        organization.egrul_egrip = request.form['egrul_egrip']
+        organization.phone = request.form['phone']
+        organization.email = request.form['email']
+
+        db.session.commit()
+
+        flash("Информация об организации обновлена!")
+        return redirect(url_for('my_organization', login=session['login']))
+    except Exception as e:
+        db.session.rollback()
+        return f"Ошибка записи: {e}", 500
+
+@app.route('/myorganization/delete/<int:id>', methods=['POST'])
+def delete_organization(id):
+    organization = Organization.query.get_or_404(id)
+    db.session.delete(organization)
+    db.session.commit()
+
+    return redirect(url_for('my_organization', login=session['login']))
+
+@app.route("/myorganization/organization/<int:id>")
+def organization(id):
+    organization = Organization.query.get_or_404(id)
+    entities = Entity.query.filter_by(id_organization=organization.id)
+
+    id_entity = [entity.id for entity in entities]
+    attribute_entities = Attribute_entity.query.filter(Attribute_entity.id_entity.in_(id_entity)).all()
+
+    return render_template('organization.html', organization=organization, entities=entities, attribute_entities=attribute_entities)
+
+@app.route("/organization/add_attribute_entity/<int:id>", methods=['POST'])
+def add_attribute_entity(id):
+    organization = Organization.query.get_or_404(id)
+
+    o_id_entity = request.form['id_entity']
+    o_name_attribute = request.form['name_attribute']
+    o_description = request.form['description']
+
+    try:
+        new_attribute = Attribute_entity(id_entity = o_id_entity, name_attribute = o_name_attribute, description = o_description)
+        db.session.add(new_attribute)
+        db.session.commit()
+
+        flash("Атрибут добавлен!")
+        return redirect(url_for('organization', id=organization.id))
     except Exception as e:
         db.session.rollback()
         return f"Ошибка записи: {e}", 500

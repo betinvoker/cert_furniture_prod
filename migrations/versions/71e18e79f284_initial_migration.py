@@ -1,8 +1,8 @@
 """Initial migration
 
-Revision ID: 5e1d6c55115e
+Revision ID: 71e18e79f284
 Revises: 
-Create Date: 2025-05-24 14:15:27.833108
+Create Date: 2025-05-31 03:18:06.310042
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '5e1d6c55115e'
+revision = '71e18e79f284'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -86,7 +86,7 @@ def upgrade():
     sa.Column('jur_address', sa.String(length=1024), nullable=False),
     sa.Column('inn', sa.String(length=12), nullable=True),
     sa.Column('kpp', sa.String(length=9), nullable=True),
-    sa.Column('egrul_egrip', sa.String(length=13), nullable=True),
+    sa.Column('egrul_egrip', sa.String(length=15), nullable=True),
     sa.Column('phone', sa.String(length=12), nullable=True),
     sa.Column('email', sa.String(length=1024), nullable=True),
     sa.ForeignKeyConstraint(['id_client'], ['customer.id'], ),
@@ -106,6 +106,7 @@ def upgrade():
     sa.Column('date_create', sa.DateTime(), nullable=True),
     sa.Column('status', sa.String(length=1), nullable=True),
     sa.Column('id_entity', sa.Integer(), nullable=True),
+    sa.Column('name_attribute', sa.String(length=512), nullable=False),
     sa.Column('description', sa.String(length=2048), nullable=False),
     sa.ForeignKeyConstraint(['id_entity'], ['entity.id'], ),
     sa.PrimaryKeyConstraint('id')
