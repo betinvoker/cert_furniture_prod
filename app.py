@@ -173,5 +173,24 @@ def organization(id):
 
     return render_template('organization.html', organization=organization, entities=entities, attribute_entities=attribute_entities)
 
+@app.route("/organization/add_attribute_entity/<int:id>", methods=['POST'])
+def add_attribute_entity(id):
+    organization = Organization.query.get_or_404(id)
+
+    o_id_entity = request.form['id_entity']
+    o_name_attribute = request.form['name_attribute']
+    o_description = request.form['description']
+
+    try:
+        new_attribute = Attribute_entity(id_entity = o_id_entity, name_attribute = o_name_attribute, description = o_description)
+        db.session.add(new_attribute)
+        db.session.commit()
+
+        flash("Атрибут добавлен!")
+        return redirect(url_for('organization', id=organization.id))
+    except Exception as e:
+        db.session.rollback()
+        return f"Ошибка записи: {e}", 500
+
 if __name__ == "__main__":
     app.run(debug=True)
