@@ -70,7 +70,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h1 class="modal-title fs-5" id="exampleModalLabel">Добавить новую организацию</h1>
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Добавить новую характеристику для объекта</h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -103,16 +103,10 @@ document.querySelectorAll('.open-modal').forEach(button => {
     button.addEventListener('click', function() {
         // Получаем данные из data-атрибутов
         const identity = this.dataset.id;
-        
         // Находим элементы модального окна
         const id_entity = document.getElementById('id_entity');
-        
         // Заполняем модальное окно
         id_entity.value = identity;
-    
-        // Показываем модальное окно
-        const modal = new bootstrap.Modal(document.getElementById('exampleModal'));
-        modal.show();
     });
 });
 </script>
