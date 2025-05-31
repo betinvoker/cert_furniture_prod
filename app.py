@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_sqlalchemy import SQLAlchemy
-from app.models import db, Customer, Worker, Organization
+from app.models import db, Customer, Worker, Organization, Entity, Attribute_entity
 from config import Config
 from flask import session
 # from app import create_app
@@ -40,7 +40,7 @@ def register():
         phone = request.form['phone']
         email = request.form['email']
 
-        if Customer.query.filter_by(login=login).first() | Worker.query.filter_by(login=login).first():
+        if Customer.query.filter_by(login=login).first():
             flash('Пользователь уже существует')
             return redirect(url_for('register'))
 
@@ -162,6 +162,16 @@ def delete_organization(id):
     db.session.commit()
 
     return redirect(url_for('my_organization', login=session['login']))
+
+@app.route("/myorganization/organization/<int:id>")
+def organization(id):
+    organization = Organization.query.get_or_404(id)
+    entities = Entity.query.filter_by(id_organization=organization.id)
+
+    id_entity = [entity.id for entity in entities]
+    attribute_entities = Attribute_entity.query.filter(Attribute_entity.id_entity.in_(id_entity)).all()
+
+    return render_template('organization.html', organization=organization, entities=entities, attribute_entities=attribute_entities)
 
 if __name__ == "__main__":
     app.run(debug=True)

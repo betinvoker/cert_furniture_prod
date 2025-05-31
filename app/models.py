@@ -80,6 +80,7 @@ class Attribute_entity(db.Model):
     date_create = db.Column(db.DateTime, default=datetime.now, doc='Дата создания/изменения статуса')
     status = db.Column(db.String(1), default='I', doc='Статус (I/U/D)')
     id_entity = db.Column(db.Integer, db.ForeignKey('entity.id'), doc='ID Entity')
+    name_attribute = db.Column(db.String(512), nullable=False, doc='Название характеристики')
     description = db.Column(db.String(2048), nullable=False, doc='Описание технической характеристики')
 
     request = db.relationship("Entity", backref=db.backref("Entity", uselist=False))

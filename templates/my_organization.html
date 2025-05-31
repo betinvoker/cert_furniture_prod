@@ -76,7 +76,7 @@
                 <th scope="col">ИНН</th>
                 <th scope="col">КПП</th>
                 <th scope="col">ЕГРЮЛ/ЕГРИП</th>
-                <th scope="col">Телефона</th>
+                <th scope="col">Телефон</th>
                 <th scope="col">Email</th>
                 <th scope="col">Изменить</th>
                 <th scope="col">Удалить</th>
@@ -86,7 +86,9 @@
             {%for organization in organizations %}
             <tr>
                 <th scope="row">{{organization.id}}</th>
-                <td>{{organization.name}}</td>
+                <td>
+                     <a href="{{ url_for('organization', id=organization.id) }}" class="link-primary text-decoration-none">{{organization.name}}</a>
+                </td>
                 <td>{{organization.jur_address}}</td>
                 <td>{{organization.inn}}</td>
                 <td>{{organization.kpp}}</td>

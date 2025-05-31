@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}#{{organization.id}} {{organization.name}}{% endblock %}
+
+{% block top %}
+<div class="row" style="margin-top: 20px;">
+    <div class="col-12">
+        <dl class="row">
+            <dd class="col-sm-12"><h2>{{organization.name}}</h2></dd>
+
+            <dt class="col-sm-2">Юридический адрес :</dt>
+            <dd class="col-sm-10">{{organization.jur_address}}</dd>
+
+            <dt class="col-sm-2">ИНН :</dt>
+            <dd class="col-sm-10">{{organization.inn}}</dd>
+
+            <dt class="col-sm-2">КПП :</dt>
+            <dd class="col-sm-10">{{organization.kpp}}</dd>
+
+            <dt class="col-sm-2">ЕГРЮЛ/ЕГРИП :</dt>
+            <dd class="col-sm-10">{{organization.egrul_egrip}}</dd>
+
+            <dt class="col-sm-2">Телефон :</dt>
+            <dd class="col-sm-10">{{organization.phone}}</dd>
+
+            <dt class="col-sm-2">Email :</dt>
+            <dd class="col-sm-10">{{organization.email}}</dd>
+        </dl>
+
+        <p class="card-text"><small class="text-muted">Дата добавления: {{organization.date_create.strftime('%d.%m.%Y')}}</small></p>
+    </div> 
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row" style="margin-top: 20px;">
+    {% for entity in entities %}
+    <div class="card mt-1">
+        <div class="card-body">
+            <h5 class="card-title">#{{entity.id}} {{entity.name}}</h5>
+            <p><strong>Характеристики</strong></p>
+            <div class="col-12">
+                <dl class="row">
+                    {% for item in attribute_entities %}
+                    {% if item.id_entity == entity.id %}
+                    <dt class="col-sm-2">{{item.name_attribute}} :</dt>
+                    <dd class="col-sm-4">{{item.description}}</dd>
+                    {% endif %}
+                    {% else %}
+                    <dt class="col-sm-2">Характеристика :</dt>
+                    <dd class="col-sm-5">Нет характеристик.</dd>
+                    {% endfor %}
+                </dl>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
