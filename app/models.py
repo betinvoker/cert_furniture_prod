@@ -66,7 +66,7 @@ class Entity(db.Model):
     id = db.Column(db.Integer, primary_key=True, doc='Первичный ключ')
     date_create = db.Column(db.DateTime, default=datetime.now, doc='Дата создания/изменения статуса')
     status = db.Column(db.String(1), default='I', doc='Статус (I/U/D)')
-    name = db.Column(db.String(1024), nullable=False, doc='Наименование организации')
+    name = db.Column(db.String(1024), nullable=False, doc='Наименование объекта')
     id_organization = db.Column(db.Integer, db.ForeignKey('organization.id'), doc='ID Organization')
     
     request = db.relationship("Organization", backref=db.backref("organization", uselist=False))

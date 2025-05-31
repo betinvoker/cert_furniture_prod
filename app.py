@@ -169,9 +169,26 @@ def organization(id):
     entities = Entity.query.filter_by(id_organization=organization.id)
 
     id_entity = [entity.id for entity in entities]
-    attribute_entities = Attribute_entity.query.filter(Attribute_entity.id_entity.in_(id_entity)).all()
+    attribute_entities = Attribute_entity.query.filter(Attribute_entity.id_entity.in_(id_entity)).filter(Attribute_entity.status!='D')
 
     return render_template('organization.html', organization=organization, entities=entities, attribute_entities=attribute_entities)
+
+@app.route("/add_entity/<int:id>", methods=['POST'])
+def add_entity(id):
+    organization = Organization.query.get_or_404(id)
+
+    o_name = request.form['name']
+
+    try:
+        new_entity = Entity(id_organization = organization.id, name = o_name)
+        db.session.add(new_entity)
+        db.session.commit()
+
+        flash("Объект добавлен!")
+        return redirect(url_for('organization', id=organization.id))
+    except Exception as e:
+        db.session.rollback()
+        return f"Ошибка записи: {e}", 500
 
 @app.route("/organization/add_attribute_entity/<int:id>", methods=['POST'])
 def add_attribute_entity(id):
@@ -191,6 +208,68 @@ def add_attribute_entity(id):
     except Exception as e:
         db.session.rollback()
         return f"Ошибка записи: {e}", 500
+
+@app.route("/organization/add_attribute/<int:id>", methods=['POST'])
+def add_attribute(id):
+    organization = Organization.query.get_or_404(id)
+
+    o_id_entity = request.form['id_entity']
+    o_name_attribute = request.form['name_attribute']
+    o_description = request.form['description']
+
+    try:
+        new_attribute = Attribute_entity(id_entity = o_id_entity, name_attribute = o_name_attribute, description = o_description)
+        db.session.add(new_attribute)
+        db.session.commit()
+
+        flash("Атрибут добавлен!")
+        return redirect(url_for('entity', id_organization=organization.id, id_entity=o_id_entity))
+    except Exception as e:
+        db.session.rollback()
+        return f"Ошибка записи: {e}", 500
+
+@app.route('/attribute/update/<int:id>', methods=['POST'])
+def update_attribute(id):
+    try:
+        attribute = Attribute_entity.query.get_or_404(id)
+        entity = Entity.query.get_or_404(attribute.id_entity)
+        organization = Organization.query.get_or_404(entity.id_organization)
+
+        attribute.name_attribute = request.form['exampleUpdateNameAttribute']
+        attribute.description = request.form['exampleFormControlTextareaUpdateDescription']
+
+        db.session.commit()
+
+        flash("Информация о характеристике объекта обновлена!")
+        return redirect(url_for('entity', id_organization=organization.id, id_entity=entity.id))
+    except Exception as e:
+        db.session.rollback()
+        return f"Ошибка записи: {e}", 500
+
+@app.route('/attribute/delete/<int:id>', methods=['POST'])
+def delete_attribute(id):
+    try:
+        attribute = Attribute_entity.query.get_or_404(id)
+        entity = Entity.query.get_or_404(attribute.id_entity)
+        organization = Organization.query.get_or_404(entity.id_organization)
+
+        attribute.status = 'D'
+
+        db.session.commit()
+
+        flash("Информация о характеристике объекта удалена!")
+        return redirect(url_for('entity', id_organization=organization.id, id_entity=entity.id))
+    except Exception as e:
+        db.session.rollback()
+        return f"Ошибка записи: {e}", 500
+
+@app.route("/organization/<int:id_organization>/entity/<int:id_entity>")
+def entity(id_organization, id_entity):
+    organization = Organization.query.get_or_404(id_organization)
+    entity = Entity.query.get_or_404(id_entity)
+    attributes = Attribute_entity.query.filter_by(id_entity=entity.id).filter(Attribute_entity.status!='D')
+
+    return render_template('entity.html', organization=organization, entity=entity, attributes=attributes)
 
 if __name__ == "__main__":
     app.run(debug=True)

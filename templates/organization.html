@@ -26,8 +26,14 @@
             <dt class="col-sm-2">Email :</dt>
             <dd class="col-sm-10">{{organization.email}}</dd>
         </dl>
-
-        <p class="card-text"><small class="text-muted">Дата добавления: {{organization.date_create.strftime('%d.%m.%Y')}}</small></p>
+        <div class="row justify-content-between">
+            <div class="col col-sm-3 col-md-2">
+                <p class="card-text"><small class="text-muted">Дата добавления: {{organization.date_create.strftime('%d.%m.%Y')}}</small></p>
+            </div>
+            <div class="col col-sm-3 col-md-2">
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#exampleModalAddEntity">Добавить объект</button>
+            </div>
+        </div>
     </div> 
 </div>
 {% endblock %}
@@ -39,7 +45,9 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-sm-7 col-md-10">
-                    <h5 class="card-title">#{{entity.id}} {{entity.name}}</h5>
+                    <a href="{{ url_for('entity', id_organization=organization.id, id_entity=entity.id) }}" class="link-primary text-decoration-none">
+                        <h5 class="card-title">#{{entity.id}} {{entity.name}}</h5>
+                    </a>
                     <p><strong>Характеристики</strong></p>
                 </div>
                 <div class="col-sm-5 col-md-2">
@@ -85,6 +93,31 @@
                         <label for="exampleFormControlTextareaDescription" class="form-label">Описание характеристики</label>
                         <textarea class="form-control" name="description" id="exampleFormControlTextareaDescription" aria-describedby="descriptionHelp" rows="3"></textarea>
                         <div id="descriptionHelp" class="form-text">Вводится подробное описание характеристики объекта (максимум 2048 символов).</div>
+                    </div>
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-primary">Добавить</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModalAddEntity" tabindex="-1" aria-labelledby="exampleModalLabel">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Добавить новый объект</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addFormOrganization" method="POST" action="{{ url_for('add_entity', id=organization.id) }}">
+                    <div class="mb-3">
+                        <label for="exampleInpuEntity" class="form-label">Наименование объекта</label>
+                        <input type="text" class="form-control" name="name" id="exampleInpuEntity" aria-describedby="nameHelp">
+                        <div id="nameHelp" class="form-text">Вводится полное или сокращенное наименование объекта (максимум 1024 символов).</div>
                     </div>
                     <div class="mb-3">
                         <button type="submit" class="btn btn-primary">Добавить</button>
