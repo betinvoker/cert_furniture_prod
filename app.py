@@ -271,5 +271,64 @@ def entity(id_organization, id_entity):
 
     return render_template('entity.html', organization=organization, entity=entity, attributes=attributes)
 
+@app.route("/organizations/entities", methods=['GET'])
+def entities():
+    customer = Customer.query.filter_by(login=session['login']).first()
+    organizations = Organization.query.filter_by(id_client=customer.id).filter(Organization.status!='D').all()
+    organization_ids = [org.id for org in organizations]
+    query = Entity.query.filter(Entity.id_organization.in_(organization_ids)).filter(Entity.status!='D')
+
+    search = request.args.get('exampleFormControlSearch', '')
+    if search:
+        if search.isdigit():
+            query = query.filter(Entity.id == int(search))
+        else:
+            query = query.filter(Entity.name.ilike(f'%{search}%'))
+
+    entities = query.filter(Entity.status!='D').all()
+
+    return render_template('entities.html', organizations=organizations, entities=entities)
+
+@app.route('/entity/update/<int:id>', methods=['POST'])
+def update_entity(id):
+    try:
+        entity = Entity.query.get_or_404(id)
+        customer = Customer.query.filter_by(login=session['login']).first()
+        organizations = Organization.query.filter_by(id_client=customer.id).filter(Organization.status!='D').all()
+    
+        organization_ids = [org.id for org in organizations] 
+        entities = Entity.query.filter(Entity.id_organization.in_(organization_ids)).filter(Entity.status!='D').all()
+        print(request.form['exampleUpdateNameEntity'], request.form['exampleSelectUpdateOrganizations'])
+        entity.name = request.form['exampleUpdateNameEntity']
+        entity.id_organization = request.form['exampleSelectUpdateOrganizations']
+
+        db.session.commit()
+
+        flash("Информация об объекте обновлена!")
+        return redirect(url_for('entities', organizations=organizations, entities=entities))
+    except Exception as e:
+        db.session.rollback()
+        return f"Ошибка записи: {e}", 500
+
+@app.route('/entity/delete/<int:id>', methods=['POST'])
+def delete_entity(id):
+    try:
+        entity = Entity.query.get_or_404(id)
+        customer = Customer.query.filter_by(login=session['login']).first()
+        organizations = Organization.query.filter_by(id_client=customer.id).filter(Organization.status!='D').all()
+    
+        organization_ids = [org.id for org in organizations] 
+        entities = Entity.query.filter(Entity.id_organization.in_(organization_ids)).filter(Entity.status!='D').all()
+
+        entity.status = 'D'
+
+        db.session.commit()
+
+        flash("Информация об объекте удалена!")
+        return redirect(url_for('entities', organizations=organizations, entities=entities))
+    except Exception as e:
+        db.session.rollback()
+        return f"Ошибка записи: {e}", 500
+
 if __name__ == "__main__":
     app.run(debug=True)

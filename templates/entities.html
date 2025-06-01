@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}Объекты для экспертизы{% endblock %}
+
+{% block top %}
+<div class="row" style="margin-top: 20px;">
+    <form action="{{ url_for('entities') }}" method="GET">
+        <label for="exampleFormControlSearch" class="form-label"><h4>Введите название объекта или его ID:</h4></label>
+        <div class="input-group mb-3">
+            <input type="text" class="form-control" name="exampleFormControlSearch" id="exampleFormControlSearch" placeholder="Введите название объекта или его ID...">
+            <button class="btn btn-outline-info" type="submit" id="btnSerch">Поиск</button>
+        </div>
+    </form>     
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row" style="margin-top: 20px;">
+    <table class="table caption-top">
+        <caption>Список объектов</caption>
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Наименование объекта</th>
+                <th scope="col">Наименование организации</th>
+                <th scope="col">Дата создания</th>
+                <th scope="col">Изменить</th>
+                <th scope="col">Удалить</th>
+            </tr>
+        </thead>
+        <tbody>
+            {%for organization in organizations %}
+                {%for entity in entities %}
+                    {% if organization.id == entity.id_organization %}
+            <tr>
+                <th scope="row">{{entity.id}}</th>
+                <td>
+                    <a href="{{ url_for('entity', id_organization=organization.id, id_entity=entity.id) }}" class="link-primary text-decoration-none">{{entity.name}}</a>
+                </td>
+                <td>
+                     <a href="{{ url_for('organization', id=organization.id) }}" class="link-primary text-decoration-none">{{organization.name}}</a>
+                </td>
+                <td>{{entity.date_create.strftime('%d.%m.%Y %H:%m')}}</td>
+
+                <td>
+                    <button type="button" class="btn btn-outline-success open-modal" data-bs-toggle="modal" data-bs-target="#exampleModalUpdateEntity" name="btnUpdateEntity" 
+                        data-id="{{ entity.id }}" data-entity_name="{{ entity.name }}" data-id_organization="{{ organization.id }}" data-name_organization="{{ organization.name }}"
+                        data-update-url="{{ url_for('update_entity', id=entity.id) }}">Изменить</button>
+                </td>
+                <td>
+                    <form action="{{ url_for('delete_entity', id=entity.id) }}" method="POST">
+                        <button type="submit" class="btn btn btn-outline-danger" onclick="return confirm('Вы уверены, что хотите удалить эту запись?')">Удалить</button>
+                    </form>
+                </td>
+            </tr>
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModalUpdateEntity" tabindex="-1" aria-labelledby="exampleModalLabel">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Изменить объект</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="updateFormEntity" method="POST" action="">
+                    <input type="hidden" name="id" id="id">
+                    <div class="mb-3">
+                        <label for="exampleUpdateNameEntity" class="form-label">Наименование объекта</label>
+                        <input type="text" class="form-control" name="exampleUpdateNameEntity" id="exampleUpdateNameEntity" aria-describedby="nameEntityHelp">
+                        <div id="nameEntityHelp" class="form-text">Вводится полное или сокращенное наименование объекта.</div>
+                    </div>
+                    <div class="mb-3">
+                        <select class="form-select" name="exampleSelectUpdateOrganizations" id="exampleSelectUpdateOrganizations" aria-label="Выбирите организацию">
+                            {%for organization in organizations %}
+                            <option value="{{organization.id}}">{{organization.name}}</option>
+                            {% endfor %}
+                        </select>                     
+                    </div>
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-primary">Изменить</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+document.querySelectorAll('.open-modal').forEach(button => {
+    button.addEventListener('click', function() {
+        // Устанавливаем action формы
+        const updateUrl = this.getAttribute('data-update-url');
+        const form = document.getElementById('updateFormEntity');
+        form.action = updateUrl;
+ 
+        // Получаем данные из data-атрибутов
+        const id_entity = this.dataset.id;
+        const entity_name = this.dataset.entity_name;
+        const id_organization = this.dataset.id_organization;
+        const name_organization = this.dataset.name_organization;
+        // Находим элементы модального окна
+        const idModal = document.getElementById('id');
+        const name_entityModal = document.getElementById('exampleUpdateNameEntity');
+        // Заполняем модальное окно
+        idModal.value = id_entity;
+        name_entityModal.value = entity_name;
+
+        const select = document.getElementById("exampleSelectUpdateOrganizations");
+        const option = document.createElement("option");
+        option.value = id_organization;
+        option.textContent = name_organization;
+        option.selected = true;
+        select.appendChild(option);
+    });
+});
+</script>
+{% endblock %}
