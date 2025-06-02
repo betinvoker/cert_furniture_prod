@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_sqlalchemy import SQLAlchemy
-from app.models import db, Customer, Worker, Organization, Entity, Attribute_entity
+from app.models import db, Customer, Worker, Organization, Entity, Attribute_entity, Request
 from config import Config
 from flask import session
 # from app import create_app
@@ -329,6 +329,27 @@ def delete_entity(id):
     except Exception as e:
         db.session.rollback()
         return f"Ошибка записи: {e}", 500
+
+@app.route('/requests', methods=['GET'])
+def requests():
+    customer = Customer.query.filter_by(login=session['login']).first()
+    organizations = Organization.query.filter_by(id_client=customer.id).filter(Organization.status!='D').all()
+    
+    organization_ids = [org.id for org in organizations]
+    entities = Entity.query.filter(Entity.id_organization.in_(organization_ids)).filter(Entity.status!='D').all()
+    entity_ids = [ent.id for ent in entities]
+    query = Request.query.filter(Request.id_entity.in_(entity_ids)).filter(Request.status!='D')
+
+    search = request.args.get('exampleFormControlSearch', '')
+    if search:
+        if search.isdigit():
+            query = query.filter(Request.id == int(search))
+        else:
+            query = query.filter(Request.id_entity == int(search))
+
+    requests = query.filter(Request.status!='D').all()
+
+    return render_template('requests.html', organizations=organizations, entities=entities, requests=requests)
 
 if __name__ == "__main__":
     app.run(debug=True)

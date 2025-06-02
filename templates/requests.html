@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Заявки на экспертизу{% endblock %}
+
+{% block top %}
+<div class="row" style="margin-top: 20px;">
+    <form action="{{ url_for('requests') }}" method="GET">
+        <label for="exampleFormControlSearch" class="form-label"><h4>Введите название объекта или его ID:</h4></label>
+        <div class="input-group mb-3">
+            <input type="text" class="form-control" name="exampleFormControlSearch" id="exampleFormControlSearch" placeholder="Введите название объекта или его ID...">
+            <button class="btn btn-outline-info" type="submit" id="btnSerch">Поиск</button>
+        </div>
+    </form>     
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row" style="margin-top: 20px;">
+    <table class="table caption-top">
+        <caption>Список объектов</caption>
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Наименование объекта</th>
+                <th scope="col">Организация</th>
+                <th scope="col">Статус заявки</th>
+                <th scope="col">ОКВЭД</th>
+                <th scope="col">БАНК</th>
+                <th scope="col">кор.Счет</th>
+                <th scope="col">Телефон</th>
+                <th scope="col">Дата создания</th>
+                <th scope="col">Изменить</th>
+                <th scope="col">Удалить</th>
+            </tr>
+        </thead>
+        <tbody>
+            {%for request in requests %}
+                {%for entity in entities %}    
+                    {% if request.id_entity == entity.id %}
+                        {%for organization in organizations %}
+                            {% if entity.id_organization == organization.id %}
+            <tr>
+                <th scope="row">{{request.id}}</th>
+                <td>
+                    <a href="{{ url_for('entity', id_organization=organization.id, id_entity=entity.id) }}" class="link-primary text-decoration-none">{{entity.name}}</a>
+                </td>
+                <td>
+                     <a href="{{ url_for('organization', id=organization.id) }}" class="link-primary text-decoration-none">{{organization.name}}</a>
+                </td>
+                <td>{{request.status_request}}</td>
+                <td>{{request.okved}}</td>
+                <td>{{request.id_bank}}</td>
+                <td>{{request.account}}</td>
+                <td>{{request.phone}}</td>
+                <td>{{request.date_create.strftime('%d.%m.%Y %H:%m')}}</td>
+                
+                <td>
+                    <button type="button" class="btn btn-outline-success open-modal" data-bs-toggle="modal" data-bs-target="#exampleModalUpdateEntity" name="btnUpdateEntity" 
+                        data-id="{{ entity.id }}" data-entity_name="{{ entity.name }}" data-id_organization="{{ organization.id }}" data-name_organization="{{ organization.name }}"
+                        data-update-url="{{ url_for('update_entity', id=entity.id) }}">Изменить</button>
+                </td>
+                <td>
+                    <form action="{{ url_for('delete_entity', id=entity.id) }}" method="POST">
+                        <button type="submit" class="btn btn btn-outline-danger" onclick="return confirm('Вы уверены, что хотите удалить эту запись?')">Удалить</button>
+                    </form>
+                </td>
+            </tr>  
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block script %}
+
+{% endblock %}
