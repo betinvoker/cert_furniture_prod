@@ -5,17 +5,57 @@
 {% block top %}
 <div class="row" style="margin-top: 20px;">
     <form action="{{ url_for('requests') }}" method="GET">
-        <label for="exampleFormControlSearch" class="form-label"><h4>Введите название объекта или его ID:</h4></label>
-        <div class="input-group mb-3">
-            <input type="text" class="form-control" name="exampleFormControlSearch" id="exampleFormControlSearch" placeholder="Введите название объекта или его ID...">
-            <button class="btn btn-outline-info" type="submit" id="btnSerch">Поиск</button>
+        <label for="exampleFormControlSearch" class="form-label"><h3>Поиск заявки</h3></label>
+        <div class="row">
+            <div class="col-12">
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" name="exampleFormControlSearch" id="exampleFormControlSearch" placeholder="Введите название объекта или его ID...">
+                    <label for="exampleFormControlSearch">Введите название объекта или его ID...</label>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-floating mb-3">
+                    <select class="form-select" id="floatingSelectOrganization" name="floatingSelectOrganization" aria-label="Floating label select example">
+                        <option value="" selected>Все</option>
+                        {% for organization in organizations %}
+                        <option value="{{organization.id}}">{{organization.name}}</option>
+                        {% endfor %}
+                    </select>
+                    <label for="floatingSelect">Выберите название организации которой принадлежит объект</label>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-floating mb-3">
+                    <select class="form-select" id="floatingSelectStatusRequest" name="floatingSelectStatusRequest" aria-label="Floating label select example">
+                        <option value="" selected>Все</option>
+                        <option value="Зарегистрирована">Зарегистрирована</option>
+                        <option value="В работе">В работе</option>
+                        <option value="Отклонена">Отклонена</option>
+                        <option value="Выполнена">Выполнена</option>
+                    </select>
+                    <label for="floatingSelect">Выберите статус заявки</label>
+                </div>
+            </div>
+        </div>
+        <div class="row justify-content-end">
+            <div class="col col-sm-2 col-md-2 d-grid gap-2">
+                <button class="btn btn-outline-info" type="submit" id="btnSerch">Поиск</button>
+            </div>
+        </div>
+        <div class="py-3">
+            <hr class="my-0">
+        </div>
+        <div class="row justify-content-end">
+            <div class="col col-sm-2 col-md-2 d-grid gap-2">
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#exampleModalAddEntity">Добавить объект</button>
+            </div>
         </div>
     </form>     
 </div>
 {% endblock %}
 
 {% block content %}
-<div class="row" style="margin-top: 20px;">
+<div class="row">
     <table class="table caption-top">
         <caption>Список объектов</caption>
         <thead>

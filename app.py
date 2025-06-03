@@ -333,20 +333,34 @@ def delete_entity(id):
 @app.route('/requests', methods=['GET'])
 def requests():
     customer = Customer.query.filter_by(login=session['login']).first()
+
+    if not customer:
+        return redirect(url_for('login'))
+
     organizations = Organization.query.filter_by(id_client=customer.id).filter(Organization.status!='D').all()
     
     organization_ids = [org.id for org in organizations]
     entities = Entity.query.filter(Entity.id_organization.in_(organization_ids)).filter(Entity.status!='D').all()
     entity_ids = [ent.id for ent in entities]
-    query = Request.query.filter(Request.id_entity.in_(entity_ids)).filter(Request.status!='D')
+    query = Request.query.filter(Request.id_entity.in_(entity_ids), Request.status!='D')
 
-    search = request.args.get('exampleFormControlSearch', '')
+    search = request.args.get('exampleFormControlSearch', '').strip()
     if search:
         if search.isdigit():
             query = query.filter(Request.id == int(search))
         else:
             query = query.filter(Request.id_entity == int(search))
 
+    selectOrganization = request.args.get('floatingSelectOrganization', '')
+    if selectOrganization:
+        if selectOrganization.isdigit():
+            query = query.filter(Request.id_entity == Entity.id).filter(Entity.id_organization == int(selectOrganization))
+
+    selectStatusRequest = request.args.get('floatingSelectStatusRequest', '')
+    if selectStatusRequest:
+        selectStatusRequest = selectStatusRequest.strip()
+        query = query.filter(Request.status_request == str(selectStatusRequest))
+            
     requests = query.filter(Request.status!='D').all()
 
     return render_template('requests.html', organizations=organizations, entities=entities, requests=requests)
