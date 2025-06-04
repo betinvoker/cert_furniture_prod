@@ -47,7 +47,7 @@
         </div>
         <div class="row justify-content-end">
             <div class="col col-sm-2 col-md-2 d-grid gap-2">
-                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#exampleModalAddEntity">Добавить объект</button>
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#exampleModalAddRequest">Добавить заявку</button>
             </div>
         </div>
     </form>     
@@ -57,7 +57,7 @@
 {% block content %}
 <div class="row">
     <table class="table caption-top">
-        <caption>Список объектов</caption>
+        <caption>Список заявок</caption>
         <thead>
             <tr>
                 <th scope="col">#</th>
@@ -79,6 +79,8 @@
                     {% if request.id_entity == entity.id %}
                         {%for organization in organizations %}
                             {% if entity.id_organization == organization.id %}
+                                {% for bank in banks %}
+                                    {% if request.id_bank == bank.id %}
             <tr>
                 <th scope="row">{{request.id}}</th>
                 <td>
@@ -89,7 +91,7 @@
                 </td>
                 <td>{{request.status_request}}</td>
                 <td>{{request.okved}}</td>
-                <td>{{request.id_bank}}</td>
+                <td>{{bank.name}}</td>
                 <td>{{request.account}}</td>
                 <td>{{request.phone}}</td>
                 <td>{{request.date_create.strftime('%d.%m.%Y %H:%m')}}</td>
@@ -105,6 +107,8 @@
                     </form>
                 </td>
             </tr>  
+                                    {% endif %}
+                                {% endfor %}
                             {% endif %}
                         {% endfor %}
                     {% endif %}
@@ -112,6 +116,62 @@
             {% endfor %}
         </tbody>
     </table>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModalAddRequest" tabindex="-1" aria-labelledby="exampleModalLabel">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Добавить заявку</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addFormRequest" method="POST" action="{{ url_for('add_request') }}" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="exampleSelectEntity" class="form-label">Выбирите объект для экспертизы</label>
+                        <select class="form-select" name="exampleSelectEntity" id="exampleSelectEntity" aria-label="Выбирите объект для экспертизы">
+                            {%for entity in entities %}
+                            <option value="{{entity.id}}">#{{entity.id}}. {{entity.name}}</option>
+                            {% endfor %}
+                        </select>                     
+                    </div>
+                    <div class="mb-3">
+                        <label for="formMaterialEntity" class="form-label">Загрузите документацию к объекту</label>
+                        <input class="form-control" type="file" id="formMaterialEntity" name="formMaterialEntity" aria-describedby="materialEntityHelp">
+                        <div id="materialEntityHelp" class="form-text">Подгружаются файлы форматов: 'docx', 'pdf', 'xlsx'. Название файлов следует писать на английском языке.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="exampleSelectBank" class="form-label">Выбирите банк</label>
+                        <select class="form-select" name="exampleSelectBank" id="exampleSelectBank" aria-label="Выбирите банк">
+                            {%for bank in banks %}
+                            <option value="{{bank.id}}">{{bank.name}}</option>
+                            {% endfor %}
+                        </select>                     
+                    </div>
+                    <div class="mb-3">
+                        <label for="exampleAccount" class="form-label">Введите корреспондентский счет</label>
+                        <input type="number" class="form-control" name="exampleAccount" id="exampleAccount" aria-describedby="accountHelp" pattern="\d{20}" required>
+                        <div id="accountHelp" class="form-text">Вводится корреспондентский счет (20 символов).</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="exampleOKVED" class="form-label">Введите ОКВЭД</label>
+                        <input type="text" class="form-control" name="exampleOKVED" id="exampleOKVED" aria-describedby="OKVEDHelp" required>
+                        <div id="OKVEDHelp" class="form-text">Вводится ОКВЭД (6 символов).</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="examplePhone" class="form-label">Введите номер телефона для обратной связи</label>
+                        <input type="number" class="form-control" name="examplePhone" id="examplePhone" aria-describedby="phoneHelp" pattern="\d{12}" required>
+                        <div id="phoneHelp" class="form-text">Пример: 79999999999</div>
+                    </div>
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-primary">Добавить</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 

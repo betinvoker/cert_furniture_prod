@@ -1,9 +1,11 @@
 from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_sqlalchemy import SQLAlchemy
-from app.models import db, Customer, Worker, Organization, Entity, Attribute_entity, Request
+from app.models import db, Customer, Worker, Organization, Entity, Attribute_entity, Request, Bank
 from config import Config
 from flask import session
+from werkzeug.utils import secure_filename
+import os
 # from app import create_app
 
 # app = create_app() # Запуск скрипта создания изменения в БД в соответствии с моделями (app.models)
@@ -12,11 +14,20 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = Config.SQLALCHEMY_DATABASE_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = Config.SQLALCHEMY_TRACK_MODIFICATIONS
 app.config['SECRET_KEY'] = Config.SECRET_KEY
+
+app.config['UPLOAD_FOLDER_MATERIAL_ENTITY'] = './static/material_entity'  # Папка для загрузки
+app.config['ALLOWED_EXTENSIONS'] = {'docx', 'pdf', 'xlsx'}  # Разрешенные расширения
+os.makedirs(app.config['UPLOAD_FOLDER_MATERIAL_ENTITY'], exist_ok=True) # Создаем папку, если ее нет
+
 db.init_app(app)
 
 login_manager = LoginManager()
 login_manager.login_view = 'login'
 login_manager.init_app(app)
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -338,7 +349,7 @@ def requests():
         return redirect(url_for('login'))
 
     organizations = Organization.query.filter_by(id_client=customer.id).filter(Organization.status!='D').all()
-    
+    banks = Bank.query.filter(Bank.status!='D').all()
     organization_ids = [org.id for org in organizations]
     entities = Entity.query.filter(Entity.id_organization.in_(organization_ids)).filter(Entity.status!='D').all()
     entity_ids = [ent.id for ent in entities]
@@ -363,7 +374,32 @@ def requests():
             
     requests = query.filter(Request.status!='D').all()
 
-    return render_template('requests.html', organizations=organizations, entities=entities, requests=requests)
+    return render_template('requests.html', organizations=organizations, entities=entities, requests=requests, banks=banks)
+
+@app.route("/requests/add_request", methods=['POST'])
+def add_request():
+    o_id_entity = request.form['exampleSelectEntity']
+    o_id_bank = request.form['exampleSelectBank']
+    o_account = request.form['exampleAccount']
+    o_okved = request.form['exampleOKVED']
+    o_phone = request.form['examplePhone']
+
+    file = request.files['formMaterialEntity']
+        
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER_MATERIAL_ENTITY'], filename))
+
+    try:
+        new_request = Request(id_entity = o_id_entity, id_bank = o_id_bank, account = o_account, okved = o_okved, phone = o_phone, link_material = filename)
+        db.session.add(new_request)
+        db.session.commit()
+
+        flash("Заявка на экспертизу добавлена!")
+        return redirect(url_for('requests'))
+    except Exception as e:
+        db.session.rollback()
+        return f"Ошибка записи: {e}", 500
 
 if __name__ == "__main__":
     app.run(debug=True)
