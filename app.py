@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request, flash
+from flask import Flask, render_template, redirect, url_for, request, flash, send_from_directory, abort
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_sqlalchemy import SQLAlchemy
 from app.models import db, Customer, Worker, Organization, Entity, Attribute_entity, Request, Bank
@@ -28,6 +28,30 @@ login_manager.init_app(app)
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+@app.route('/download/<filename>')
+def download_file(filename):
+    try:
+        # Проверяем безопасное имя файла
+        safe_filename = secure_filename(filename)
+        if not safe_filename:
+            abort(404)
+            
+        # Полный путь к файлу
+        file_path = os.path.join(app.config['UPLOAD_FOLDER_MATERIAL_ENTITY'], safe_filename)
+        
+        # Проверяем существование файла
+        if not os.path.isfile(file_path):
+            abort(404)
+            
+        return send_from_directory(
+            app.config['UPLOAD_FOLDER_MATERIAL_ENTITY'],
+            safe_filename,
+            as_attachment=True,
+            download_name=safe_filename  # Имя файла для скачивания
+        )
+    except Exception as e:
+        abort(500)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -400,6 +424,22 @@ def add_request():
     except Exception as e:
         db.session.rollback()
         return f"Ошибка записи: {e}", 500
+
+@app.route('/requests/request/<int:id>', methods=['GET'])
+def myrequest(id):
+    customer = Customer.query.filter_by(login=session['login']).first()
+    
+    if not customer:
+        return redirect(url_for('login'))
+    
+    myrequest = Request.query.get(id)
+    organizations = Organization.query.filter_by(id_client=customer.id).filter(Organization.status!='D').all()
+    banks = Bank.query.filter(Bank.status!='D').all()
+    organization_ids = [org.id for org in organizations]
+    entities = Entity.query.filter(Entity.id_organization.in_(organization_ids)).filter(Entity.status!='D').all()
+    attributes_entity = Attribute_entity.query.filter(Attribute_entity.id_entity==myrequest.id_entity).filter(Attribute_entity.status!='D').all()
+    
+    return render_template('request.html', organizations=organizations, entities=entities, request=myrequest, banks=banks, attributes=attributes_entity)
 
 if __name__ == "__main__":
     app.run(debug=True)

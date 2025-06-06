@@ -69,8 +69,7 @@
                 <th scope="col">кор.Счет</th>
                 <th scope="col">Телефон</th>
                 <th scope="col">Дата создания</th>
-                <th scope="col">Изменить</th>
-                <th scope="col">Удалить</th>
+                <th scope="col">Подробнее</th>
             </tr>
         </thead>
         <tbody>
@@ -97,14 +96,7 @@
                 <td>{{request.date_create.strftime('%d.%m.%Y %H:%m')}}</td>
                 
                 <td>
-                    <button type="button" class="btn btn-outline-success open-modal" data-bs-toggle="modal" data-bs-target="#exampleModalUpdateEntity" name="btnUpdateEntity" 
-                        data-id="{{ entity.id }}" data-entity_name="{{ entity.name }}" data-id_organization="{{ organization.id }}" data-name_organization="{{ organization.name }}"
-                        data-update-url="{{ url_for('update_entity', id=entity.id) }}">Изменить</button>
-                </td>
-                <td>
-                    <form action="{{ url_for('delete_entity', id=entity.id) }}" method="POST">
-                        <button type="submit" class="btn btn btn-outline-danger" onclick="return confirm('Вы уверены, что хотите удалить эту запись?')">Удалить</button>
-                    </form>
+                    <a class="btn btn-outline-info" href="{{ url_for('myrequest', id=request.id) }}" role="button">Подробнее</a>
                 </td>
             </tr>  
                                     {% endif %}

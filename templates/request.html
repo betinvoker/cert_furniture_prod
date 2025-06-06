@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}#{{request.id}} Заявка на экспертизу{% endblock %}
+
+{% block top %}
+    <div class="row" style="margin-top: 20px;">
+        <div class="col-sm-4 col-md-2 col-lg-2">
+            <img src="{{ url_for('static', filename='images/product.jpg') }}" class="img-fluid rounded-start" alt="Логотип">
+        </div>
+        <div class="col-sm-8 col-md-10 col-lg-10">
+            <dl class="row">
+                {%for entity in entities %}    
+                    {% if request.id_entity == entity.id %}
+                        {%for organization in organizations %}
+                            {% if entity.id_organization == organization.id %}
+                                {% for bank in banks %}
+                                    {% if request.id_bank == bank.id %}
+
+                <dd class="col-sm-10"><h2>#{{request.id}} Заявка на экспертизу {{entity.name}}</h2></dd>
+                <dd class="col-sm-2">
+                    <h5>
+                        {% if request.status_request == 'Зарегистрирована' %}
+                        <span class="badge text-bg-secondary">{{request.status_request}}</span>
+                        {% elif request.status_request == 'В работе' %}
+                        <span class="badge text-bg-info">{{request.status_request}}</span>
+                        {% elif request.status_request == 'Отклонена' %}
+                        <span class="badge text-bg-warning">{{request.status_request}}</span>
+                        {% elif request.status_request == 'Выполнена' %}
+                        <span class="badge text-bg-success">{{request.status_request}}</span>
+                        {% endif %}
+                    </h5>
+                </dd>
+                
+                <div class="py-2">
+                    <hr class="my-0">
+                </div>
+
+                <dt class="col-sm-4">Наименование объекта :</dt>
+                <dd class="col-sm-8">{{entity.name}}</dd>
+
+                <dt class="col-sm-4">Наименование организации :</dt>
+                <dd class="col-sm-8">{{organization.name}}</dd>
+
+                <dt class="col-sm-4">ОКВЭД :</dt>
+                <dd class="col-sm-8">{{request.okved}}</dd>
+
+                <dt class="col-sm-4">Наименование банка плательщика :</dt>
+                <dd class="col-sm-8">{{bank.name}}</dd>
+
+                <dt class="col-sm-4">Счет плательщика :</dt>
+                <dd class="col-sm-8">{{request.account}}</dd>
+
+                <dt class="col-sm-4">Телефон для обратной связи :</dt>
+                <dd class="col-sm-8">{{request.phone}}</dd>
+
+                <dt class="col-sm-4">Документация изготовителя :</dt>
+                <dd class="col-sm-8">
+                    <a href="{{ url_for('download_file', filename=request.link_material) }}">Документация изготовителя</a>
+                </dd>
+
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+            </dl>
+            
+            <div class="py-2">
+                <hr class="my-0">
+            </div>
+
+            <dl class="row">
+                <dt class="col-sm-4">Наименование характеристики</dt>
+                <dd class="col-sm-8"><b>Описание характеристики</b></dd>
+
+                {% for attribute in attributes %}
+                <dt class="col-sm-4">{{attribute.name_attribute}} :</dt>
+                <dd class="col-sm-8">{{attribute.description}}</dd>
+                {% endfor %}
+            </dl>
+
+            <p class="card-text"><small class="text-muted">Дата регистрации: {{request.date_create.strftime('%d.%m.%Y')}}</small></p>
+        </div>
+        
+    </div>
+{% endblock %}
+
+{% block content %}
+
+{% endblock %}
+
+{% block script %}
+
+{% endblock %}
