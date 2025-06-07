@@ -4,8 +4,22 @@
 
 {% block top %}
     <div class="row" style="margin-top: 20px;">
-        <div class="col-sm-4 col-md-2 col-lg-2">
+        <div class="row justify-content-end" style="margin-bottom: 10px;">
+            <div class="col-sm-2 col-md-2 col-lg-1">
+                <button type="button" class="btn btn-outline-success open-modal" data-bs-toggle="modal" data-bs-target="#exampleModalUpdateRequest" name="btnUpdateRequest">Изменить</button>
+            </div>
+            <div class="col-sm-2 col-md-2 col-lg-1">
+                <form action="{{ url_for('delete_request', id=request.id) }}" method="POST">
+                    <button type="submit" class="btn btn-outline-danger">Удалить</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-sm-5 col-md-3 col-lg-2">
             <img src="{{ url_for('static', filename='images/product.jpg') }}" class="img-fluid rounded-start" alt="Логотип">
+
+            <form action="{{ url_for('generate_pdf_request', id=request.id) }}" method="GET">
+                <button type="submit" class="btn btn-outline-secondary">PDF</button>
+            </form>
         </div>
         <div class="col-sm-8 col-md-10 col-lg-10">
             <dl class="row">
@@ -84,6 +98,73 @@
         </div>
         
     </div>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModalUpdateRequest" tabindex="-1" aria-labelledby="exampleModalLabel">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Изменить заявку</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="updateFormRequest" method="POST" action="{{ url_for('update_request', id=request.id) }}" enctype="multipart/form-data">
+                    <input type="hidden" name="id" id="id" value="{{request.id}}">
+                    <div class="mb-3">
+                        <label for="exampleSelectUpdateEntity" class="form-label">Объект для экспертизы</label>
+                        <select class="form-select" name="exampleSelectUpdateEntity" id="exampleSelectUpdateEntity" aria-label="Выбирите объект для экспертизы" aria-describedby="entityHelp">
+                            {%for entity in entities %}
+                                {% if request.id_entity == entity.id %}
+                            <option value="{{entity.id}}" selected>{{entity.name}}</option>
+                                {% else %}
+                            <option value="{{entity.id}}">{{entity.name}}</option> 
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        <div id="entityHelp" class="form-text">Выберите объект для которого требуется провести экспертизу.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="formMaterialEntity" class="form-label">Загрузите документацию к объекту</label>
+                        <input class="form-control" type="file" id="formMaterialEntity" name="formMaterialEntity" aria-describedby="materialEntityHelp">
+                        <div id="materialEntityHelp" class="form-text">Подгружаются файлы форматов: 'docx', 'pdf', 'xlsx'. Название файлов следует писать на английском языке.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="exampleSelectUpdateBank" class="form-label">Выбирите банк</label>
+                        <select class="form-select" name="exampleSelectUpdateBank" id="exampleSelectUpdateBank" aria-label="Выбирите банк" aria-describedby="bankHelp">
+                            {% for bank in banks %}
+                                {% if request.id_bank == bank.id %}
+                            <option value="{{bank.id}}">{{bank.name}}</option>
+                                {% else %}
+                            <option value="{{bank.id}}">{{bank.name}}</option> 
+                                {% endif %}
+                            {% endfor %}
+                        </select>                     
+                        <div id="bankHelp" class="form-text">Выберите объект для которого требуется провести экспертизу.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="exampleAccount" class="form-label">Введите корреспондентский счет</label>
+                        <input type="number" class="form-control" name="exampleAccount" id="exampleAccount" aria-describedby="accountHelp" pattern="\d{20}" value="{{request.account}}" required>
+                        <div id="accountHelp" class="form-text">Вводится корреспондентский счет (20 символов).</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="exampleUpdateOKVED" class="form-label">Введите ОКВЭД</label>
+                        <input type="text" class="form-control" name="exampleUpdateOKVED" id="exampleUpdateOKVED" aria-describedby="okvedHelp" value="{{request.okved}}">
+                        <div id="okvedHelp" class="form-text">Вводится ОКВЭД (6 символов).</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="examplePhone" class="form-label">Введите номер телефона для обратной связи</label>
+                        <input type="number" class="form-control" name="examplePhone" id="examplePhone" aria-describedby="phoneHelp" pattern="\d{12}" value="{{request.phone}}" required>
+                        <div id="phoneHelp" class="form-text">Пример: 79999999999</div>
+                    </div>
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-primary">Изменить</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block content %}

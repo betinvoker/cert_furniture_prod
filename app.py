@@ -1,14 +1,29 @@
-from flask import Flask, render_template, redirect, url_for, request, flash, send_from_directory, abort
+from flask import Flask, render_template, redirect, url_for, request, flash, send_from_directory, abort, make_response
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import select
 from app.models import db, Customer, Worker, Organization, Entity, Attribute_entity, Request, Bank
 from config import Config
-from flask import session
+from flask import session as flask_session
 from werkzeug.utils import secure_filename
+import pdfkit
+from urllib.parse import quote
+from datetime import datetime
 import os
 # from app import create_app
 
 # app = create_app() # Запуск скрипта создания изменения в БД в соответствии с моделями (app.models)
+
+def format_datetime(value, format="%d.%m.%Y %H:%M"):
+    """Форматирует datetime объект в строку"""
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        try:
+            value = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            return value
+    return value.strftime(format)
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = Config.SQLALCHEMY_DATABASE_URI
@@ -18,6 +33,11 @@ app.config['SECRET_KEY'] = Config.SECRET_KEY
 app.config['UPLOAD_FOLDER_MATERIAL_ENTITY'] = './static/material_entity'  # Папка для загрузки
 app.config['ALLOWED_EXTENSIONS'] = {'docx', 'pdf', 'xlsx'}  # Разрешенные расширения
 os.makedirs(app.config['UPLOAD_FOLDER_MATERIAL_ENTITY'], exist_ok=True) # Создаем папку, если ее нет
+
+PDFKIT_CONFIG = pdfkit.configuration(wkhtmltopdf=r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe')
+
+# Регистрация фильтра
+app.jinja_env.filters['datetimeformat'] = format_datetime
 
 db.init_app(app)
 
@@ -55,7 +75,7 @@ def download_file(filename):
 
 @login_manager.user_loader
 def load_user(user_id):
-    user_type = session.get('user_type')
+    user_type = flask_session.get('user_type')
 
     if user_type == 'customer':
         return db.session.get(Customer, int(user_id))
@@ -91,23 +111,23 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        session['login'] = request.form['login']
+        flask_session['login'] = request.form['login']
         password = request.form['password']
-        session['user_type'] = request.form['role']
+        flask_session['user_type'] = request.form['role']
 
-        if session['user_type'] == 'customer':
-            customer = Customer.query.filter_by(login=session['login']).first()
+        if flask_session['user_type'] == 'customer':
+            customer = Customer.query.filter_by(login=flask_session['login']).first()
 
             if customer and customer.check_password(password):
                 login_user(customer)
-                return redirect(url_for('profile', login=session['login']))
+                return redirect(url_for('profile', login=flask_session['login']))
             
-        if session['user_type'] == 'worker':
-            worker = Worker.query.filter_by(login=session['login']).first()
+        if flask_session['user_type'] == 'worker':
+            worker = Worker.query.filter_by(login=flask_session['login']).first()
             
             if worker and worker.check_password(password):
                 login_user(worker)
-                return redirect(url_for('profile_worker', login=session['login']))
+                return redirect(url_for('profile_worker', login=flask_session['login']))
 
         flash('Неверные логин или пароль')
         return redirect(url_for('login'))
@@ -126,24 +146,24 @@ def index():
 
 @app.route("/profile/<login>")
 def profile(login):
-    customer = Customer.query.filter_by(login=session['login']).first()
+    customer = Customer.query.filter_by(login=flask_session['login']).first()
     return render_template('profile.html', user=customer)
 
 @app.route("/worker/<login>")
 def profile_worker(login):
-    worker = Worker.query.filter_by(login=session['login']).first()
+    worker = Worker.query.filter_by(login=flask_session['login']).first()
     return render_template('profile_worker.html', user=worker)
 
 @app.route("/myorganization/<login>")
 def my_organization(login):
-    customer = Customer.query.filter_by(login=session['login']).first()
+    customer = Customer.query.filter_by(login=flask_session['login']).first()
     organizations = Organization.query.filter_by(id_client=customer.id)
 
     return render_template('my_organization.html', user=customer, organizations=organizations)
 
 @app.route("/add_myorganization", methods=['POST'])
 def add_organization():
-    customer = Customer.query.filter_by(login=session['login']).first()
+    customer = Customer.query.filter_by(login=flask_session['login']).first()
 
     o_name = request.form['name']
     o_jur_address = request.form['jur_address']
@@ -159,7 +179,7 @@ def add_organization():
         db.session.commit()
 
         flash("Организация добавлена!")
-        return redirect(url_for('my_organization', login=session['login']))
+        return redirect(url_for('my_organization', login=flask_session['login']))
     except Exception as e:
         db.session.rollback()
         return f"Ошибка записи: {e}", 500
@@ -185,7 +205,7 @@ def organization_update(id):
         db.session.commit()
 
         flash("Информация об организации обновлена!")
-        return redirect(url_for('my_organization', login=session['login']))
+        return redirect(url_for('my_organization', login=flask_session['login']))
     except Exception as e:
         db.session.rollback()
         return f"Ошибка записи: {e}", 500
@@ -196,7 +216,7 @@ def delete_organization(id):
     db.session.delete(organization)
     db.session.commit()
 
-    return redirect(url_for('my_organization', login=session['login']))
+    return redirect(url_for('my_organization', login=flask_session['login']))
 
 @app.route("/myorganization/organization/<int:id>")
 def organization(id):
@@ -308,7 +328,7 @@ def entity(id_organization, id_entity):
 
 @app.route("/organizations/entities", methods=['GET'])
 def entities():
-    customer = Customer.query.filter_by(login=session['login']).first()
+    customer = Customer.query.filter_by(login=flask_session['login']).first()
     organizations = Organization.query.filter_by(id_client=customer.id).filter(Organization.status!='D').all()
     organization_ids = [org.id for org in organizations]
     query = Entity.query.filter(Entity.id_organization.in_(organization_ids)).filter(Entity.status!='D')
@@ -328,12 +348,12 @@ def entities():
 def update_entity(id):
     try:
         entity = Entity.query.get_or_404(id)
-        customer = Customer.query.filter_by(login=session['login']).first()
+        customer = Customer.query.filter_by(login=flask_session['login']).first()
         organizations = Organization.query.filter_by(id_client=customer.id).filter(Organization.status!='D').all()
     
         organization_ids = [org.id for org in organizations] 
         entities = Entity.query.filter(Entity.id_organization.in_(organization_ids)).filter(Entity.status!='D').all()
-        print(request.form['exampleUpdateNameEntity'], request.form['exampleSelectUpdateOrganizations'])
+
         entity.name = request.form['exampleUpdateNameEntity']
         entity.id_organization = request.form['exampleSelectUpdateOrganizations']
 
@@ -349,7 +369,7 @@ def update_entity(id):
 def delete_entity(id):
     try:
         entity = Entity.query.get_or_404(id)
-        customer = Customer.query.filter_by(login=session['login']).first()
+        customer = Customer.query.filter_by(login=flask_session['login']).first()
         organizations = Organization.query.filter_by(id_client=customer.id).filter(Organization.status!='D').all()
     
         organization_ids = [org.id for org in organizations] 
@@ -367,7 +387,7 @@ def delete_entity(id):
 
 @app.route('/requests', methods=['GET'])
 def requests():
-    customer = Customer.query.filter_by(login=session['login']).first()
+    customer = Customer.query.filter_by(login=flask_session['login']).first()
 
     if not customer:
         return redirect(url_for('login'))
@@ -427,7 +447,7 @@ def add_request():
 
 @app.route('/requests/request/<int:id>', methods=['GET'])
 def myrequest(id):
-    customer = Customer.query.filter_by(login=session['login']).first()
+    customer = Customer.query.filter_by(login=flask_session['login']).first()
     
     if not customer:
         return redirect(url_for('login'))
@@ -440,6 +460,111 @@ def myrequest(id):
     attributes_entity = Attribute_entity.query.filter(Attribute_entity.id_entity==myrequest.id_entity).filter(Attribute_entity.status!='D').all()
     
     return render_template('request.html', organizations=organizations, entities=entities, request=myrequest, banks=banks, attributes=attributes_entity)
+
+@app.route('/request/update/<int:id>', methods=['POST'])
+def update_request(id):
+    try:
+        customer = Customer.query.filter_by(login=flask_session['login']).first()
+    
+        if not customer:
+            return redirect(url_for('login'))
+        
+        o_request = Request.query.get_or_404(id)
+        
+        o_request.id_entity = request.form['exampleSelectUpdateEntity']
+        o_request.id_bank = request.form['exampleSelectUpdateBank']
+        o_request.okved = request.form['exampleUpdateOKVED']
+        o_request.account = request.form['exampleAccount']
+        o_request.phone = request.form['examplePhone']
+        o_request.status_request = 'Зарегистрирована'
+
+        # Обработка файла
+        file = request.files['formMaterialEntity']
+        
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER_MATERIAL_ENTITY'], filename))
+            o_request.link_material = filename
+
+        db.session.commit()
+
+        flash("Информация о заявке обновлена!")
+        return redirect(url_for('myrequest', id=o_request.id))
+    except Exception as e:
+        db.session.rollback()
+        return f"Ошибка записи: {e}", 500
+
+@app.route('/request/delete/<int:id>', methods=['POST'])
+def delete_request(id):
+    try:
+        customer = Customer.query.filter_by(login=flask_session['login']).first()
+    
+        if not customer:
+            return redirect(url_for('login'))
+    
+        request = Request.query.get_or_404(id)
+
+        request.status = 'D'
+
+        db.session.commit()
+
+        flash("Информация о заявке удалена!")
+        return redirect(url_for('requests'))
+    except Exception as e:
+        db.session.rollback()
+        return f"Ошибка записи: {e}", 500
+
+@app.route('/generate_pdf_request/<int:id>', methods=['GET'])
+def generate_pdf_request(id):
+    try:
+        customer = Customer.query.filter_by(login=flask_session['login']).first()
+    
+        if not customer:
+            return redirect(url_for('login'))
+        
+        myrequest = Request.query.get_or_404(id)
+        entity = db.session.get(Entity, myrequest.id_entity)
+        organization = db.session.get(Organization, entity.id_organization)
+        bank = db.session.get(Bank, myrequest.id_bank)
+        worker = db.session.get(Worker, myrequest.id_worker) if myrequest.id_worker else None
+        attributes = Attribute_entity.query.filter(Attribute_entity.id_entity==entity.id, Attribute_entity.status != 'D').all()
+
+        template_context = {
+            'request_obj': myrequest
+            ,'customer': customer
+            ,'entity': entity
+            ,'org': organization
+            ,'bank': bank
+            ,'worker': worker
+            ,'attrs': attributes
+            ,'creation_date': myrequest.date_create
+            ,'title': f'#{myrequest.id}. Заявка на экспертизу {entity.name}'
+        }
+
+        # Рендерим HTML шаблон
+        html = render_template('report.html', **template_context)
+        # Конвертируем HTML в PDF
+        options = {
+            'footer-center': '[page]/[topage]',
+            'footer-font-size': '10',
+            'footer-spacing': '5'
+        }
+
+        pdf = pdfkit.from_string(html, False, configuration=PDFKIT_CONFIG, options=options)
+        
+        # Генерация имени файла с кодированием
+        filename = f"request_{myrequest.id}_{entity.name}.pdf"
+        safe_filename = quote(filename, safe='')  # Кодируем спецсимволы
+
+        # Создаем ответ
+        response = make_response(pdf)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'inline; filename=request_{safe_filename}_{quote(entity.name)}.pdf'
+        return response
+    
+    except Exception as e:
+        app.logger.error(f"Error generating PDF: {str(e)}")
+        return "Ошибка при генерации PDF", 500
 
 if __name__ == "__main__":
     app.run(debug=True)

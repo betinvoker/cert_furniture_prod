@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+        body { font-family: Arial; }
+        h1 { color: #333; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+    </style>
+</head>
+<body>
+    <h1>{{ title }}</h1>
+    <hr>
+    <p>Статус заявки: {{ request_obj.status_request }}</p>
+    <p>Дата создания: {{ creation_date | datetimeformat('%d.%m.%Y %H:%M') }}</p>
+    <p>ОКВЭДЖ: {{ request_obj.okved }}</p>
+    <p>Номер телефона для обратной связи: +{{ request_obj.phone }}</p>
+    <hr>
+    <h4>Информация о клиенте</h4>
+    <p>ФИО: {{ customer.last_name }} {{ customer.first_name }} {{ customer.patronymic }}</p>
+    <p>Номер телефона: +{{ customer.phone }}, email: {{ customer.email }}</p>
+    <hr>
+    <h4>Ответственный за экспертизу</h4>
+    <p>ФИО: {{ worker.last_name }} {{ worker.first_name }} {{ worker.patronymic }}</p>
+    <p>Должность: {{ worker.position }}</p>
+    <hr>
+
+    <table>
+        <tr>
+            <h4>Информация об организации</h4>
+        </tr>
+        <tr>
+            <th>Полное наименование</th>
+            <td>{{ org.name }}</td>
+        </tr>
+        <tr>
+            <th>Юридический адрес</th>
+            <td>{{ org.jur_address }}</td>
+        </tr>
+        <tr>
+            <th>ИНН</th>
+            <td>{{ org.inn }}</td>
+        </tr>
+        <tr>
+            <th>КПП</th>
+            <td>{{ org.kpp }}</td>
+        </tr>
+        <tr>
+            <th>ЕГРЮЛ или ЕГРИП</th>
+            <td>{{ org.egrul_egrip }}</td>
+        </tr>
+        <tr>
+            <th>Номер телефона</th>
+            <td>+{{ org.phone }}</td>
+        </tr>
+        <tr>
+            <th>Email</th>
+            <td>{{ org.email }}</td>
+        </tr>
+    </table>
+
+    <table>
+        <tr>
+            <h4>Информация о банке</h4>
+        </tr>
+        <tr>
+            <th>Полное наименование</th>
+            <td>{{ bank.name }}</td>
+        </tr>
+        <tr>
+            <th>ИНН</th>
+            <td>{{ bank.inn }}</td>
+        </tr>
+        <tr>
+            <th>КПП</th>
+            <td>{{ bank.kpp }}</td>
+        </tr>
+        <tr>    
+            <th>Корреспондентский счет</th>
+            <td>{{ bank.account }}</td>
+        </tr>
+        <tr>
+            <th>ОКВЭД</th>
+            <td>{{ bank.okved }}</td>
+        </tr>
+        <tr>
+            <th>Лицевой счет</th>
+            <td>{{ request_obj.account }}</td>
+        </tr>
+    </table>
+
+    <table>
+        <tr>
+            <h4>Характеристики объекта: #{{ entity.id }} {{ entity.name }}</h4>
+        </tr>
+        <thead>
+            <tr>
+                <th>Характеристика</th>
+                <th>Описание характеристики</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for attr in attrs %}
+            <tr>
+                <td>{{ attr.name_attribute }}</td>
+                <td>{{ attr.description }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
