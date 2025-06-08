@@ -4,7 +4,12 @@
 
 {% block top %}
 <div class="row" style="margin-top: 20px;">
+    {% if  session.user_type == 'customer' %}
     <form action="{{ url_for('requests') }}" method="GET">
+    {% endif %}
+    {% if  session.user_type == 'worker' %}
+    <form action="{{ url_for('requests_worker') }}" method="GET">
+    {% endif %}
         <label for="exampleFormControlSearch" class="form-label"><h3>Поиск заявки</h3></label>
         <div class="row">
             <div class="col-12">
@@ -13,7 +18,12 @@
                     <label for="exampleFormControlSearch">Введите название объекта или его ID...</label>
                 </div>
             </div>
+            {% if  session.user_type == 'customer' %}
             <div class="col-md-6">
+            {% endif %}
+            {% if  session.user_type == 'worker' %}
+            <div class="col-md-4">
+            {% endif %}
                 <div class="form-floating mb-3">
                     <select class="form-select" id="floatingSelectOrganization" name="floatingSelectOrganization" aria-label="Floating label select example">
                         <option value="" selected>Все</option>
@@ -24,7 +34,12 @@
                     <label for="floatingSelect">Выберите название организации которой принадлежит объект</label>
                 </div>
             </div>
+            {% if  session.user_type == 'customer' %}
             <div class="col-md-6">
+            {% endif %}
+            {% if  session.user_type == 'worker' %}
+            <div class="col-md-4">
+            {% endif %}
                 <div class="form-floating mb-3">
                     <select class="form-select" id="floatingSelectStatusRequest" name="floatingSelectStatusRequest" aria-label="Floating label select example">
                         <option value="" selected>Все</option>
@@ -36,6 +51,19 @@
                     <label for="floatingSelect">Выберите статус заявки</label>
                 </div>
             </div>
+            {% if  session.user_type == 'worker' %}
+            <div class="col-md-4">
+                <div class="form-floating mb-3">
+                    <select class="form-select" id="floatingSelectWorker" name="floatingSelectWorker" aria-label="Floating label select example">
+                        <option value="" selected>Все</option>
+                        {% for worker in workers %}
+                        <option value="{{worker.id}}">{{worker.last_name}} {{worker.first_name}} {{worker.patronymic}} ({{worker.position}})</option>
+                        {% endfor %}
+                    </select>
+                    <label for="floatingSelect">Выберите ответственного</label>
+                </div>
+            </div>
+            {% endif %}
         </div>
         <div class="row justify-content-end">
             <div class="col col-sm-2 col-md-2 d-grid gap-2">
@@ -45,11 +73,13 @@
         <div class="py-3">
             <hr class="my-0">
         </div>
+        {% if  session.user_type == 'customer' %}
         <div class="row justify-content-end">
             <div class="col col-sm-2 col-md-2 d-grid gap-2">
                 <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#exampleModalAddRequest">Добавить заявку</button>
             </div>
         </div>
+        {% endif %}
     </form>     
 </div>
 {% endblock %}
@@ -82,12 +112,27 @@
                                     {% if request.id_bank == bank.id %}
             <tr>
                 <th scope="row">{{request.id}}</th>
+                
+                {% if session.user_type == 'customer' %}
                 <td>
                     <a href="{{ url_for('entity', id_organization=organization.id, id_entity=entity.id) }}" class="link-primary text-decoration-none">{{entity.name}}</a>
                 </td>
+                {% endif %}
+
+                {% if session.user_type == 'worker' %}
+                <td>{{entity.name}}</td>
+                {% endif %}
+                
+                {% if session.user_type == 'customer' %}
                 <td>
                      <a href="{{ url_for('organization', id=organization.id) }}" class="link-primary text-decoration-none">{{organization.name}}</a>
                 </td>
+                {% endif %}
+
+                {% if session.user_type == 'worker' %}
+                <td>{{organization.name}}</td>
+                {% endif %}
+
                 <td>{{request.status_request}}</td>
                 <td>{{request.okved}}</td>
                 <td>{{bank.name}}</td>
@@ -96,7 +141,13 @@
                 <td>{{request.date_create.strftime('%d.%m.%Y %H:%m')}}</td>
                 
                 <td>
+                    {% if  session.user_type == 'customer' %}
                     <a class="btn btn-outline-info" href="{{ url_for('myrequest', id=request.id) }}" role="button">Подробнее</a>
+                    {% endif %}
+
+                    {% if  session.user_type == 'worker' %}
+                    <a class="btn btn-outline-info" href="{{ url_for('request_worker', id=request.id) }}" role="button">Подробнее</a>
+                    {% endif %}
                 </td>
             </tr>  
                                     {% endif %}

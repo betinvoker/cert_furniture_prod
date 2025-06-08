@@ -2,7 +2,7 @@ from flask import Flask, render_template, redirect, url_for, request, flash, sen
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import select
-from app.models import db, Customer, Worker, Organization, Entity, Attribute_entity, Request, Bank
+from app.models import db, Customer, Worker, Organization, Entity, Attribute_entity, Request, Bank, Expertise
 from config import Config
 from flask import session as flask_session
 from werkzeug.utils import secure_filename
@@ -111,9 +111,9 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        flask_session['login'] = request.form['login']
-        password = request.form['password']
-        flask_session['user_type'] = request.form['role']
+        flask_session['login'] = request.form.get('login')
+        password = request.form.get('password')
+        flask_session['user_type'] = request.form.get('role')
 
         if flask_session['user_type'] == 'customer':
             customer = Customer.query.filter_by(login=flask_session['login']).first()
@@ -147,16 +147,28 @@ def index():
 @app.route("/profile/<login>")
 def profile(login):
     customer = Customer.query.filter_by(login=flask_session['login']).first()
+
+    if not customer:
+        return redirect(url_for('login'))
+    
     return render_template('profile.html', user=customer)
 
 @app.route("/worker/<login>")
 def profile_worker(login):
     worker = Worker.query.filter_by(login=flask_session['login']).first()
+
+    if not worker:
+        return redirect(url_for('login'))
+    
     return render_template('profile_worker.html', user=worker)
 
 @app.route("/myorganization/<login>")
 def my_organization(login):
     customer = Customer.query.filter_by(login=flask_session['login']).first()
+
+    if not customer:
+        return redirect(url_for('login'))
+    
     organizations = Organization.query.filter_by(id_client=customer.id)
 
     return render_template('my_organization.html', user=customer, organizations=organizations)
@@ -455,11 +467,12 @@ def myrequest(id):
     myrequest = Request.query.get(id)
     organizations = Organization.query.filter_by(id_client=customer.id).filter(Organization.status!='D').all()
     banks = Bank.query.filter(Bank.status!='D').all()
+    worker = Worker.query.get(myrequest.id_worker)
     organization_ids = [org.id for org in organizations]
     entities = Entity.query.filter(Entity.id_organization.in_(organization_ids)).filter(Entity.status!='D').all()
     attributes_entity = Attribute_entity.query.filter(Attribute_entity.id_entity==myrequest.id_entity).filter(Attribute_entity.status!='D').all()
     
-    return render_template('request.html', organizations=organizations, entities=entities, request=myrequest, banks=banks, attributes=attributes_entity)
+    return render_template('request.html', organizations=organizations, entities=entities, request=myrequest, banks=banks, worker=worker, attributes=attributes_entity)
 
 @app.route('/request/update/<int:id>', methods=['POST'])
 def update_request(id):
@@ -517,15 +530,11 @@ def delete_request(id):
 @app.route('/generate_pdf_request/<int:id>', methods=['GET'])
 def generate_pdf_request(id):
     try:
-        customer = Customer.query.filter_by(login=flask_session['login']).first()
-    
-        if not customer:
-            return redirect(url_for('login'))
-        
         myrequest = Request.query.get_or_404(id)
         entity = db.session.get(Entity, myrequest.id_entity)
         organization = db.session.get(Organization, entity.id_organization)
         bank = db.session.get(Bank, myrequest.id_bank)
+        customer = db.session.get(Customer, organization.id_client)
         worker = db.session.get(Worker, myrequest.id_worker) if myrequest.id_worker else None
         attributes = Attribute_entity.query.filter(Attribute_entity.id_entity==entity.id, Attribute_entity.status != 'D').all()
 
@@ -565,6 +574,128 @@ def generate_pdf_request(id):
     except Exception as e:
         app.logger.error(f"Error generating PDF: {str(e)}")
         return "Ошибка при генерации PDF", 500
+
+@app.route('/all_requests', methods=['GET'])
+def requests_worker():
+    worker = Worker.query.filter_by(login=flask_session['login']).first()
+
+    if not worker:
+        return redirect(url_for('login'))
+
+    organizations = Organization.query.filter(Organization.status!='D').all()
+    banks = Bank.query.filter(Bank.status!='D').all()
+    workers = Worker.query.filter(Worker.status!='D').all()
+    organization_ids = [org.id for org in organizations]
+    entities = Entity.query.filter(Entity.id_organization.in_(organization_ids)).filter(Entity.status!='D').all()
+    entity_ids = [ent.id for ent in entities]
+    query = Request.query.filter(Request.id_entity.in_(entity_ids), Request.status!='D')
+
+    search = request.args.get('exampleFormControlSearch', '').strip()
+    if search:
+        if search.isdigit():
+            query = query.filter(Request.id == int(search))
+        else:
+            query = query.filter(Request.id_entity == int(search))
+
+    selectOrganization = request.args.get('floatingSelectOrganization', '')
+    if selectOrganization:
+        if selectOrganization.isdigit():
+            query = query.filter(Request.id_entity == Entity.id).filter(Entity.id_organization == int(selectOrganization))
+
+    selectStatusRequest = request.args.get('floatingSelectStatusRequest', '')
+    if selectStatusRequest:
+        selectStatusRequest = selectStatusRequest.strip()
+        query = query.filter(Request.status_request == str(selectStatusRequest))
+
+    selectWorker = request.args.get('floatingSelectWorker', '')
+    if selectWorker:
+        selectWorker = selectWorker.strip()
+        query = query.filter(Request.id_worker == str(selectWorker))
+            
+    requests = query.filter(Request.status!='D').all()
+
+    return render_template('requests.html', organizations=organizations, entities=entities, requests=requests, banks=banks, workers=workers)
+
+@app.route('/all_requests/request/<int:id>', methods=['GET'])
+def request_worker(id):
+    worker = Worker.query.filter_by(login=flask_session['login']).first()
+
+    if not worker:
+        return redirect(url_for('login'))
+    
+    req = Request.query.get(id)
+    entity = Entity.query.filter(Entity.id==req.id_entity, Entity.status!='D').first()
+    organization = Organization.query.filter(Organization.id==entity.id_organization, Organization.status!='D').first()
+    worker = Worker.query.get(req.id_worker)
+    bank = Bank.query.filter(Bank.id==req.id_bank, Bank.status!='D').all()
+    attributes_entity = Attribute_entity.query.filter(Attribute_entity.id_entity==req.id_entity, Attribute_entity.status!='D').all()
+    
+    return render_template('request.html', organization=organization, entity=entity, request=req, worker=worker, bank=bank, attributes=attributes_entity)
+
+@app.route('/all_requests/request/update/<int:id>', methods=['POST'])
+def accept_request(id):
+    try:
+        worker = Worker.query.filter_by(login=flask_session['login']).first()
+    
+        if not worker:
+            return redirect(url_for('login'))
+    
+        o_request = Request.query.get_or_404(id)
+
+        if o_request.id_worker:
+            o_request.id_worker = None
+        else:
+            o_request.id_worker = worker.id
+        
+        o_request.status_request = request.form.get('exampleSelectUpdateRequestStatus') if request.form.get('exampleSelectUpdateRequestStatus') else o_request.status_request
+
+        db.session.commit()
+
+        flash("По заявке назначен эксперт или изменен статус заявки!")
+        return redirect(url_for('request_worker', id=o_request.id))
+    except Exception as e:
+        db.session.rollback()
+        return f"Ошибка записи: {e}", 500
+
+@app.route('/expertises', methods=['GET'])
+def expertises():
+    worker = Worker.query.filter_by(login=flask_session['login']).first()
+    
+    if not worker:
+        return redirect(url_for('login'))
+    
+    query = Expertise.query.filter(Expertise.id_worker==worker.id, Expertise.status!='D')
+
+    expertises_list = query.all()
+    requests_ids = [exp.id_request for exp in expertises_list]
+    requests = Request.query.filter(Request.id.in_(requests_ids), Request.status!='D').all()
+    
+    entity_ids = [req.id_entity for req in requests]
+    entities = Entity.query.filter(Entity.id.in_(entity_ids), Entity.status!='D').all()
+
+    organization_ids = [entity.id_organization for entity in entities]
+    organizations = Organization.query.filter(Organization.id.in_(organization_ids), Organization.status!='D').all()
+
+    search = request.args.get('exampleFormControlSearch', '').strip()
+    if search:
+        if search.isdigit():
+            query = query.join(Request).filter(Request.id_entity == int(search))
+
+    selectStatusExpertis = request.args.get('floatingSelectStatusExpertis', '')
+    if selectStatusExpertis:
+        query = query.filter(Expertise.status_request==str(selectStatusExpertis))
+            
+    expertises = query.filter(Expertise.status!='D').all()
+   
+    data = {
+        'worker': worker
+        ,'expertises': expertises
+        ,'requests': requests
+        ,'entities': entities
+        ,'organizations': organizations
+    }
+
+    return render_template('expertises.html', **data)
 
 if __name__ == "__main__":
     app.run(debug=True)

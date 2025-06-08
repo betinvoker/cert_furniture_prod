@@ -179,8 +179,8 @@ class Expertise(db.Model):
     id_request = db.Column(db.Integer, db.ForeignKey('request.id'), doc='ID Request')
     status_request = db.Column(db.String(9), default='Создана', doc='Статус (Создана/В работе/Отклонена/Выполнена)')
     link_inference = db.Column(db.String(4096), nullable=False, doc='Ссылка на нормативные документы')
-    id_security_requirements = db.Column(db.Integer, db.ForeignKey('security_requirements.id'), doc='ID Security_requirements')
-    id_regulatory_document = db.Column(db.Integer, db.ForeignKey('regulatory_document.id'), doc='ID Regulatory_document')
+    id_security_requirements = db.Column(db.Integer, db.ForeignKey('security_requirements.id'), nullable=True, doc='ID Security_requirements')
+    id_regulatory_document = db.Column(db.Integer, db.ForeignKey('regulatory_document.id'), nullable=True, doc='ID Regulatory_document')
   
     request = db.relationship("Worker", backref=db.backref("worker", uselist=False))
     request = db.relationship("Request", backref=db.backref("request", uselist=False))

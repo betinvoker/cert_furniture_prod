@@ -5,7 +5,7 @@
         <div class="col-sm-4 col-md-2 col-lg-2">
             <img src="{{ url_for('static', filename='images/profile_worker.jpg') }}" class="img-fluid rounded-start" alt="Логотип">
         </div>
-        <div class="col-sm-8 col-md-8 col-lg-8">
+        <div class="col-sm-8 col-md-10 col-lg-10">
             <dl class="row">
                 <dd class="col-sm-12"><h2>{{user.last_name}} {{user.first_name}} {{user.patronymic}}</h2></dd>
 
@@ -15,7 +15,7 @@
                 {% endif %}
 
                 <dt class="col-sm-3">Номер телефона :</dt>
-                <dd class="col-sm-9">{{user.phone}}</dd>
+                <dd class="col-sm-9">+{{user.phone}}</dd>
 
                 <dt class="col-sm-3">Электронная почта :</dt>
                 <dd class="col-sm-9">{{user.email}}</dd>

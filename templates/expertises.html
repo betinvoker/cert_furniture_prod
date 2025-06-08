@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Экспертизы {{current_user.login}}{% endblock %}
+
+{% block top %}
+<div class="row" style="margin-top: 20px;">
+    <form action="{{ url_for('expertises') }}" method="GET">
+        <div class="row">
+            <div class="col-8">
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" name="exampleFormControlSearch" id="exampleFormControlSearch" placeholder="Введите название объекта или его ID...">
+                    <label for="exampleFormControlSearch">Введите название объекта или его ID...</label>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="form-floating mb-3">
+                    <select class="form-select" id="floatingSelectStatusExpertis" name="floatingSelectStatusExpertis" aria-label="Floating label select example">
+                        <option value="" selected>Все</option>
+                        <option value="Создана">Создана</option>
+                        <option value="В работе">В работе</option>
+                        <option value="Отклонена">Отклонена</option>
+                        <option value="Выполнена">Выполнена</option>
+                    </select>
+                    <label for="floatingSelectStatusExpertis">Выберите статус экспертизы</label>
+                </div>
+            </div>
+            <div class="row justify-content-end">
+                <div class="col col-sm-2 col-md-2 d-grid gap-2">
+                    <button class="btn btn-outline-info" type="submit" id="btnSerch">Поиск</button>
+                </div>
+            </div>
+        </div>
+    </form>
+    
+    <div class="py-2 g-2">
+        <hr class="my-0">
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <table class="table caption-top">
+        <caption>Список заявок</caption>
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Наименование объекта</th>
+                <th scope="col">Организация</th>
+                <th scope="col">Статус экспертизы</th>
+                <th scope="col">Телефон обратной связи</th>
+                <th scope="col">Дата создания</th>
+                <th scope="col">Подробнее</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for expertis in expertises %}
+                {% for request in requests %}
+                    {% if expertis.id_request == request.id %}
+                        {% for entity in entities %}
+                            {% if request.id_entity == entity.id %}
+                                {% for organization in organizations %}
+                                    {% if entity.id_organization == organization.id %}
+            <tr>
+                <th scope="row">{{expertis.id}}</th>
+                <td>
+                    <a href="{{ url_for('request_worker', id=request.id) }}" class="link-primary text-decoration-none">{{entity.name}}</a>
+                </td>
+                <td>{{organization.name}}</td>
+                <td>{{expertis.status_request}}</td>
+                <td>{{request.phone}}</td>
+                <td>{{expertis.date_create}}</td>
+                <td>
+                    <a class="btn btn-outline-info" href="#" role="button">Подробнее</a>
+                </td>
+            </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block script %}
+
+{% endblock %}
