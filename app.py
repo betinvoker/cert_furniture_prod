@@ -1,5 +1,6 @@
 from flask import Flask, render_template, redirect, url_for, request, flash, send_from_directory, abort, make_response
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import select
 from app.models import db, Customer, Worker, Organization, Entity, Attribute_entity, Request, Bank, Expertise
@@ -29,6 +30,8 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = Config.SQLALCHEMY_DATABASE_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = Config.SQLALCHEMY_TRACK_MODIFICATIONS
 app.config['SECRET_KEY'] = Config.SECRET_KEY
+
+jwt = JWTManager(app)
 
 app.config['UPLOAD_FOLDER_MATERIAL_ENTITY'] = './static/material_entity'  # Папка для загрузки
 app.config['ALLOWED_EXTENSIONS'] = {'docx', 'pdf', 'xlsx'}  # Разрешенные расширения
@@ -86,14 +89,14 @@ def load_user(user_id):
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        login = request.form['login']
-        password = request.form['password']
+        login = request.form.get('login')
+        password = request.form.get('password')
         
-        last_name = request.form['last_name']
-        first_name = request.form['first_name']
-        patronymic = request.form['patronymic']
-        phone = request.form['phone']
-        email = request.form['email']
+        last_name = request.form.get('last_name')
+        first_name = request.form.get('first_name')
+        patronymic = request.form.get('patronymic')
+        phone = request.form.get('phone')
+        email = request.form.get('email')
 
         if Customer.query.filter_by(login=login).first():
             flash('Пользователь уже существует')
@@ -108,22 +111,23 @@ def register():
     
     return render_template('register.html')
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login', methods=['POST'])
 def login():
     if request.method == 'POST':
+
         flask_session['login'] = request.form.get('login')
         password = request.form.get('password')
         flask_session['user_type'] = request.form.get('role')
 
         if flask_session['user_type'] == 'customer':
-            customer = Customer.query.filter_by(login=flask_session['login']).first()
+            customer = Customer.query.filter_by(login=flask_session['login'] ).first()
 
             if customer and customer.check_password(password):
                 login_user(customer)
                 return redirect(url_for('profile', login=flask_session['login']))
-            
+        
         if flask_session['user_type'] == 'worker':
-            worker = Worker.query.filter_by(login=flask_session['login']).first()
+            worker = Worker.query.filter_by(login=flask_session['login'] ).first()
             
             if worker and worker.check_password(password):
                 login_user(worker)
@@ -261,9 +265,9 @@ def add_entity(id):
 def add_attribute_entity(id):
     organization = Organization.query.get_or_404(id)
 
-    o_id_entity = request.form['id_entity']
-    o_name_attribute = request.form['name_attribute']
-    o_description = request.form['description']
+    o_id_entity = request.form.get('id_entity')
+    o_name_attribute = request.form.get('name_attribute')
+    o_description = request.form.get('description')
 
     try:
         new_attribute = Attribute_entity(id_entity = o_id_entity, name_attribute = o_name_attribute, description = o_description)
@@ -484,11 +488,11 @@ def update_request(id):
         
         o_request = Request.query.get_or_404(id)
         
-        o_request.id_entity = request.form['exampleSelectUpdateEntity']
-        o_request.id_bank = request.form['exampleSelectUpdateBank']
-        o_request.okved = request.form['exampleUpdateOKVED']
-        o_request.account = request.form['exampleAccount']
-        o_request.phone = request.form['examplePhone']
+        o_request.id_entity = request.form.get('exampleSelectUpdateEntity')
+        o_request.id_bank = request.form.get('exampleSelectUpdateBank')
+        o_request.okved = request.form.get('exampleUpdateOKVED')
+        o_request.account = request.form.get('exampleAccount')
+        o_request.phone = request.form.get('examplePhone')
         o_request.status_request = 'Зарегистрирована'
 
         # Обработка файла
