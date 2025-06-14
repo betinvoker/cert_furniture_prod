@@ -827,19 +827,18 @@ def myexpertises():
     requests = Request.query.filter(Request.id.in_(requests_ids), Request.status!='D').all()
 
     expertises_ids = [req.id for req in requests]
-    query = db.session.query(Expertise).filter(Expertise.id_request.in_(expertises_ids), Expertise.status!='D')
+    query = Expertise.query.filter(Expertise.id_request.in_(expertises_ids), Expertise.status!='D')
 
-    # search = request.args.get('exampleFormControlSearch', '').strip()
-    # if search:
-    #     if search.isdigit():
-    #         query = query.join(Request).filter(Request.id_entity == int(search), Expertise.status!='D')
+    search = request.args.get('exampleFormControlSearch', '').strip()
+    if search:
+        if search.isdigit():
+            query = query.join(Request).filter(Request.id_entity == int(search))
 
-    # selectStatusExpertis = request.args.get('floatingSelectStatusExpertis', '')
-    # if selectStatusExpertis:
-    #     query = query.filter(Expertise.status_request==str(selectStatusExpertis), Expertise.status!='D')
-            
-    # expertises = query.all()
-    expertises = Expertise.query.filter(Expertise.id_request.in_(expertises_ids), Expertise.status!='D').all()
+    selectStatusExpertis = request.args.get('floatingSelectStatusExpertis', '')
+    if selectStatusExpertis:
+        query = query.filter(Expertise.status_request==str(selectStatusExpertis))
+
+    expertises = query.all()
    
     data = {
         'expertises': expertises
