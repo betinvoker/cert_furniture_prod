@@ -41,7 +41,7 @@
 {% block content %}
 <div class="row">
     <table class="table caption-top">
-        <caption>Список заявок</caption>
+        <caption>Список экспертиз</caption>
         <thead>
             <tr>
                 <th scope="col">#</th>
@@ -71,7 +71,7 @@
                 <td>{{request.phone}}</td>
                 <td>{{expertis.date_create}}</td>
                 <td>
-                    <a class="btn btn-outline-info" href="#" role="button">Подробнее</a>
+                    <a class="btn btn-outline-info" href="{{ url_for('expertise', id=expertis.id) }}" role="button">Подробнее</a>
                 </td>
             </tr>
                                     {% endif %}

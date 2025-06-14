@@ -1,9 +1,8 @@
 from flask import Flask, render_template, redirect, url_for, request, flash, send_from_directory, abort, make_response
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import select
-from app.models import db, Customer, Worker, Organization, Entity, Attribute_entity, Request, Bank, Expertise
+from app.models import db, Customer, Worker, Organization, Entity, Attribute_entity, Request, Bank, Expertise, Security_requirements, Regulatory_document
 from config import Config
 from flask import session as flask_session
 from werkzeug.utils import secure_filename
@@ -31,9 +30,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = Config.SQLALCHEMY_DATABASE_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = Config.SQLALCHEMY_TRACK_MODIFICATIONS
 app.config['SECRET_KEY'] = Config.SECRET_KEY
 
-jwt = JWTManager(app)
-
-app.config['UPLOAD_FOLDER_MATERIAL_ENTITY'] = './static/material_entity'  # Папка для загрузки
+app.config['UPLOAD_FOLDER_MATERIAL_ENTITY'] = Config.UPLOAD_FOLDER_MATERIAL_ENTITY  # Папка для загрузки
+app.config['UPLOAD_FOLDER_SECURITY_REQUIREMENTS'] = Config.UPLOAD_FOLDER_SECURITY_REQUIREMENTS # Папка для загрузки файлов с требованиями безопасности
+app.config['UPLOAD_FOLDER_REGULATORY_DOCUMENT'] = Config.UPLOAD_FOLDER_REGULATORY_DOCUMENT # Папка для загрузки файлов нормативной документации
 app.config['ALLOWED_EXTENSIONS'] = {'docx', 'pdf', 'xlsx'}  # Разрешенные расширения
 os.makedirs(app.config['UPLOAD_FOLDER_MATERIAL_ENTITY'], exist_ok=True) # Создаем папку, если ее нет
 
@@ -111,10 +110,9 @@ def register():
     
     return render_template('register.html')
 
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-
         flask_session['login'] = request.form.get('login')
         password = request.form.get('password')
         flask_session['user_type'] = request.form.get('role')
@@ -700,6 +698,157 @@ def expertises():
     }
 
     return render_template('expertises.html', **data)
+
+@app.route('/expertises/expertise/<int:id>', methods=['GET'])
+def expertise(id):
+    worker = Worker.query.filter_by(login=flask_session['login']).first()
+
+    if not worker:
+        return redirect(url_for('login'))
+
+    expertise = Expertise.query.get(id)
+    req = Request.query.filter(Request.id==expertise.id_request).first()
+    entity = Entity.query.filter(Entity.id==req.id_entity).first()
+    security_requirements = Security_requirements.query.filter(Security_requirements.status!='D').all()
+    regulatory_documents = Regulatory_document.query.filter(Regulatory_document.status!='D').all()
+    attribute_entities = Attribute_entity.query.filter(Attribute_entity.id_entity==entity.id, Entity.status!='D').all()
+    workers = Worker.query.filter(Worker.status!='D').all()
+
+    data = {
+        'worker': worker
+        ,'expertise': expertise
+        ,'request': req
+        ,'entity': entity
+        ,'security_requirements': security_requirements
+        ,'regulatory_documents': regulatory_documents
+        ,'attribute_entities': attribute_entities
+        ,'workers': workers
+    }
+
+    return render_template('expertise.html', **data)    
+
+@app.route('/expertise/update/<int:id>', methods=['POST'])
+def update_expertise(id):
+    try:
+        worker = Worker.query.filter_by(login=flask_session['login']).first()
+    
+        if not worker:
+            return redirect(url_for('login'))
+        
+        o_expertise = Expertise.query.get_or_404(id)    
+        o_expertise.status_request = request.form.get('exampleSelectUpdateExpertiseStatus') if request.form.get('exampleSelectUpdateExpertiseStatus') else o_expertise.status_request
+        o_expertise.id_worker = request.form.get('exampleSelectUpdateWorker') if request.form.get('exampleSelectUpdateWorker') else o_expertise.id_worker
+        o_expertise.link_inference = request.form.get('exampleUpdateLinkInference') if request.form.get('exampleUpdateLinkInference') else o_expertise.link_inference
+        
+        if request.form.get('exampleSelectUpdateSecurityRequirements') in ('', 'None', None):
+            o_expertise.id_security_requirements = None
+        else:
+            o_expertise.id_security_requirements = request.form.get('exampleSelectUpdateSecurityRequirements')
+
+        if request.form.get('exampleSelectUpdateRegulatoryDocuments') in ('', 'None', None):
+            o_expertise.id_regulatory_document = None
+        else:
+            o_expertise.id_regulatory_document = request.form.get('exampleSelectUpdateRegulatoryDocuments')
+
+        db.session.commit()
+
+        flash("Информация об экспертизе была изменена!")
+        return redirect(url_for('expertise', id=o_expertise.id))
+
+    except Exception as e:
+        db.session.rollback()
+        return f"Ошибка записи: {e}", 500
+
+@app.route('/generate_pdf_expertise/<int:id>', methods=['GET'])
+def generate_pdf_expertise(id):
+    try:
+        expertise = Expertise.query.get_or_404(id)
+        req = db.session.get(Request, expertise.id_request)
+        entity = db.session.get(Entity, req.id_entity)
+        organization = db.session.get(Organization, entity.id_organization)
+        worker = db.session.get(Worker, expertise.id_worker) if expertise.id_worker else None
+        attributes = Attribute_entity.query.filter(Attribute_entity.id_entity==entity.id, Attribute_entity.status != 'D').all()
+        regulatory_document = db.session.get(Regulatory_document, expertise.id_regulatory_document)
+        security_requirement = db.session.get(Security_requirements, expertise.id_security_requirements)
+        user_type = flask_session.get('user_type')
+
+        template_context = {
+            'expertise': expertise
+            ,'request': req
+            ,'entity': entity
+            ,'org': organization
+            ,'worker': worker
+            ,'attrs': attributes
+            ,'regulatory_document': regulatory_document
+            ,'security_requirement': security_requirement
+            ,'creation_date': expertise.date_create
+            ,'role': user_type
+            ,'title': f'#{ expertise.id }. Экспертиза объекта { entity.name }'
+        }
+
+        # Рендерим HTML шаблон
+        html = render_template('expertise_report.html', **template_context)
+        # Конвертируем HTML в PDF
+        options = {
+            'footer-center': '[page]/[topage]',
+            'footer-font-size': '10',
+            'footer-spacing': '5'
+        }
+
+        pdf = pdfkit.from_string(html, False, configuration=PDFKIT_CONFIG, options=options)
+        
+        # Генерация имени файла с кодированием
+        filename = f"expertise_{expertise.id}_for_{entity.name}.pdf"
+        safe_filename = quote(filename, safe='')  # Кодируем спецсимволы
+
+        # Создаем ответ
+        response = make_response(pdf)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'inline; filename=expertise_{safe_filename}_{quote(entity.name)}.pdf'
+        return response
+    
+    except Exception as e:
+        app.logger.error(f"Error generating PDF: {str(e)}")
+        return "Ошибка при генерации PDF", 500
+
+@app.route('/myexpertises', methods=['GET'])
+def myexpertises():
+    customer = Customer.query.filter_by(login=flask_session['login']).first()
+    
+    if not customer:
+        return redirect(url_for('login'))
+    
+    organizations = Organization.query.filter(Organization.id_client==customer.id, Organization.status!='D').all()
+    
+    entities_ids = [org.id for org in organizations]
+    entities = Entity.query.filter(Entity.id.in_(entities_ids), Entity.status!='D').all()
+
+    requests_ids = [ent.id for ent in entities]
+    requests = Request.query.filter(Request.id.in_(requests_ids), Request.status!='D').all()
+
+    expertises_ids = [req.id for req in requests]
+    query = db.session.query(Expertise).filter(Expertise.id_request.in_(expertises_ids), Expertise.status!='D')
+
+    # search = request.args.get('exampleFormControlSearch', '').strip()
+    # if search:
+    #     if search.isdigit():
+    #         query = query.join(Request).filter(Request.id_entity == int(search), Expertise.status!='D')
+
+    # selectStatusExpertis = request.args.get('floatingSelectStatusExpertis', '')
+    # if selectStatusExpertis:
+    #     query = query.filter(Expertise.status_request==str(selectStatusExpertis), Expertise.status!='D')
+            
+    # expertises = query.all()
+    expertises = Expertise.query.filter(Expertise.id_request.in_(expertises_ids), Expertise.status!='D').all()
+   
+    data = {
+        'expertises': expertises
+        ,'requests': requests
+        ,'entities': entities
+        ,'organizations': organizations
+    }
+
+    return render_template('myexpertises.html', **data)
 
 if __name__ == "__main__":
     app.run(debug=True)

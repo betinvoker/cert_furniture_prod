@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+        body { font-family: Arial; }
+        h1 { color: #333; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+    </style>
+</head>
+<body>
+    <h1>{{ title }}</h1>
+    <hr>
+    <br>
+
+    <table>
+        <tr>
+            <th>Статус экспертизы</th>
+            <td>{{ expertise.status_request }}</td>
+            <th>Дата создания</th>
+            <td>{{ creation_date | datetimeformat('%d.%m.%Y %H:%M') }}</td>
+        </tr>
+        <tr>
+            <th>Телефон обратной связи с клиентом</th>
+            <td>+{{ request.phone }}</td>
+            <th>ОКВЭД</th>
+            <td>{{ request.okved }}</td>
+        </tr>
+    </table>
+
+    <table>
+        <tr>
+            <h4>Информация об ответственном эксперте</h4>
+        </tr>
+        <tr>
+            <th>ФИО эксперта</th>
+            <td>{{ worker.last_name }} {{ worker.first_name }} {{ worker.patronymic }}</td>
+            <th>Должность</th>
+            <td>{{ worker.position }}</td>
+        </tr>
+        {% if role == 'worker' %}
+        <tr>
+            <th>Номер телефона</th> 
+            <td>+{{ worker.phone }}</td>
+            <th>Электронная почта</th> 
+            <td>{{ worker.email }}</td>
+        </tr>
+        {% endif %}
+    </table>
+
+    <table>
+        <tr>
+            <h4>Информация об организации</h4>
+        </tr>
+        <tr>
+            <th>Полное наименование</th>
+            <td>{{ org.name }}</td>
+            <th>ИНН</th>
+            <td>{{ org.inn }}</td>
+        </tr>
+        <tr>
+            <th>Юридический адрес</th>
+            <td>{{ org.jur_address }}</td>
+            <th>КПП</th>
+            <td>{{ org.kpp }}</td>
+        </tr>
+        <tr>
+            <th>ЕГРЮЛ или ЕГРИП</th>
+            <td>{{ org.egrul_egrip }}</td>
+            <th></th>
+            <td></td>  
+        </tr>
+        <tr>
+            <th>Номер телефона</th>
+            <td>+{{ org.phone }}</td>
+            <th>Email</th>
+            <td>{{ org.email }}</td>
+        </tr>
+    </table>
+
+    <table>
+        <tr>
+            <h4>Характеристики объекта: #{{ entity.id }} {{ entity.name }}</h4>
+        </tr>
+        <thead>
+            <tr>
+                <th>Характеристика</th>
+                <th>Описание характеристики</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for attr in attrs %}
+            <tr>
+                <th>{{ attr.name_attribute }}</th>
+                <td>{{ attr.description }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <table>
+        <tr>
+            <h4>Результаты экспертизы</h4>
+        </tr>
+        <tr>
+            {% if expertise.link_inference %}
+            <th>Ссылка на нормативные документы</th>
+            <td>
+                <a href="{{ expertise.link_inference }}">Нормативные документы</a>
+            </td>
+            {% endif %}
+        </tr>
+
+        <tr>
+            <th>Требования безопасности</th>
+            <td>
+                <a href="{{ url_for('static', filename=security_requirement.link_material) }}">{{ security_requirement.name }}</a>
+            </td>
+        </tr>
+
+        <tr>
+            <th>Нормативные документы</th>
+            <td>
+                <a href="{{ url_for('static', filename=regulatory_document.link_material) }}">{{ regulatory_document.name }}</a>
+            </td>
+        </tr>
+
+        <tr>
+            <th>Описание нормативного документа</th>
+            <td>{{ regulatory_document.description }}</td>
+        </tr>
+
+    </table>
+
+</body>
+</html>

@@ -168,7 +168,7 @@ class Request(db.Model):
     request = db.relationship("Bank", backref=db.backref("bank", uselist=False))
 
     def __repr__(self):
-        return f"<Request {self.id}, {self.name}>"
+        return f"<Request {self.id}, {self.id_entity}, {self.id_worker}>"
 
 class Expertise(db.Model):
     __tablename__ = 'expertise'

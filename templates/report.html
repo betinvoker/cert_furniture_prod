@@ -13,19 +13,40 @@
 <body>
     <h1>{{ title }}</h1>
     <hr>
-    <p>Статус заявки: {{ request_obj.status_request }}</p>
-    <p>Дата создания: {{ creation_date | datetimeformat('%d.%m.%Y %H:%M') }}</p>
-    <p>ОКВЭДЖ: {{ request_obj.okved }}</p>
-    <p>Номер телефона для обратной связи: +{{ request_obj.phone }}</p>
-    <hr>
-    <h4>Информация о клиенте</h4>
-    <p>ФИО: {{ customer.last_name }} {{ customer.first_name }} {{ customer.patronymic }}</p>
-    <p>Номер телефона: +{{ customer.phone }}, email: {{ customer.email }}</p>
-    <hr>
-    <h4>Ответственный за экспертизу</h4>
-    <p>ФИО: {{ worker.last_name }} {{ worker.first_name }} {{ worker.patronymic }}</p>
-    <p>Должность: {{ worker.position }}</p>
-    <hr>
+    <br>
+
+    <table>
+        <tr>
+            <td>Статус заявки: {{ request_obj.status_request }}</td>
+            <td>Дата создания: {{ creation_date | datetimeformat('%d.%m.%Y %H:%M') }}</td>
+        </tr>
+        <tr>
+            <td>Телефон обратной связи с клиентом: +{{ request_obj.phone }}</td>
+            <td>ОКВЭД: {{ request_obj.okved }}</td>
+        </tr>
+    </table>
+
+    <table>
+        <tr>
+            <h4>Информация о клиенте и ответственном эксперте</h4>
+        </tr>
+        <tr>
+            <th>Информация о клиенте</th>
+            <th>Ответственный за экспертизу</th>
+        </tr>
+        <tr>
+            <td>ФИО: {{ customer.last_name }} {{ customer.first_name }} {{ customer.patronymic }}</td>
+            <td>ФИО: {{ worker.last_name }} {{ worker.first_name }} {{ worker.patronymic }}</td>
+        </tr>
+        <tr>
+            <td>Номер телефона: +{{ customer.phone }}</td>
+            <td>Должность: {{ worker.position }}</td>
+        </tr>
+        <tr>
+            <td>email: {{ customer.email }}</td>
+            <td></td>
+        </tr>
+    </table>
 
     <table>
         <tr>

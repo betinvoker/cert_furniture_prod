@@ -1,12 +1,77 @@
-<h2>Регистрация</h2>
-<form method="post">
-    <input name="login" type="text" placeholder="Логин"><br>
-    <input name="password" type="password" placeholder="Пароль"><br>
-    <input name="last_name" type="text" placeholder="Фамилия"><br>
-    <input name="first_name" type="text" placeholder="Имя"><br>
-    <input name="patronymic" type="text" placeholder="Отчество"><br>
-    <input name="phone" type="text" placeholder="Номер телефона"><br>
-    <input name="email" type="email" placeholder="Электронная почта"><br>
-    <button type="submit">Зарегистрироваться</button>
-</form>
-<a href="/login">Уже есть аккаунт?</a>
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+        <script src="{{url_for('static', filename='js/bootstrap.bundle.min.js')}}"></script>
+        <title>{% block title %}Регистрация{% endblock %}</title>
+    </head>
+    <body>
+        <div class="container text-center">
+            <div class="row justify-content-md-center g-4 p-1">
+                <h2 class="card-title mt-5 m-4">Регистрация</h2>
+                <form method="POST">
+
+                    <div class="mb-2 row justify-content-md-center">
+                        <label for="login" class="col-sm-2 col-form-label">Логин</label>
+                        <div class="col-sm-5 col-md-3">
+                            <input type="text" class="form-control" id="login" name="login" placeholder="Логин">
+                        </div>
+                    </div>
+
+                    <div class="mb-2 row justify-content-md-center">
+                        <label for="password" class="col-sm-2 col-form-label">Пароль</label>
+                        <div class="col-sm-5 col-md-3">
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Пароль">
+                        </div>
+                    </div>
+
+                    <div class="mb-2 row justify-content-md-center">
+                        <label for="last_name" class="col-sm-2 col-form-label">Фамилия</label>
+                        <div class="col-sm-5 col-md-3">
+                            <input type="text" class="form-control" id="last_name" name="last_name" placeholder="Фамилия">
+                        </div>
+                    </div>
+
+                    <div class="mb-2 row justify-content-md-center">
+                        <label for="first_name" class="col-sm-2 col-form-label">Имя</label>
+                        <div class="col-sm-5 col-md-3">
+                            <input type="text" class="form-control" id="first_name" name="first_name" placeholder="Имя">
+                        </div>
+                    </div>
+
+                    <div class="mb-2 row justify-content-md-center">
+                        <label for="patronymic" class="col-sm-2 col-form-label">Отчество</label>
+                        <div class="col-sm-5 col-md-3">
+                            <input type="text" class="form-control" id="patronymic" name="patronymic" placeholder="Отчество">
+                        </div>
+                    </div>
+
+                    <div class="mb-2 row justify-content-md-center">
+                        <label for="phone" class="col-sm-2 col-form-label">Номер телефона</label>
+                        <div class="col-sm-5 col-md-3">
+                            <input type="number" class="form-control" id="phone" name="phone" placeholder="Номер телефона" pattern="\d{12}" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-2 row justify-content-md-center">
+                        <label for="email" class="col-sm-2 col-form-label">Электронная почта</label>
+                        <div class="col-sm-5 col-md-3">
+                            <input type="email" class="form-control" id="email" name="email" placeholder="Электронная почта">
+                        </div>
+                    </div>
+
+                    <div class="mb-1 mt-5 row justify-content-md-center">
+                        <div class="col-sm-7 col-md-5 d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Зарегистрироваться</button> 
+                            <a href="/login" class="nav-link">Уже есть аккаунт?</a>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </body>
+</html>
+

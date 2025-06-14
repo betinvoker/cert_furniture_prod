@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% block title %} #{{expertise.id}}. Экспертиза объекта {{ entity.name }} {% endblock %}
+
+{% block top %}
+<div class="row" style="margin-top: 20px;">
+    <div class="row justify-content-end" style="margin-bottom: 10px;">
+        {% if  session.user_type == 'worker' %}
+        <div class="col-sm-3 col-md-3 col-lg-3">
+            {% if session.login == worker.login %}
+            <button type="button" class="btn btn-outline-primary open-modal" data-bs-toggle="modal" data-bs-target="#exampleModalUpdateExpertise">Изменить информацию</button>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-sm-4 col-md-2 col-lg-2">
+        <img src="{{ url_for('static', filename='images/expertise.png') }}" class="img-fluid rounded-start" alt="Логотип экспертизы">
+    </div>
+    <div class="col-sm-8 col-md-8 col-lg-8">
+        <dl class="row">
+            <dd class="col-11">
+                <h2>#{{expertise.id}}. Экспертиза объекта {{ entity.name }}</h2>
+            </dd>
+             <dd class="col-1">
+                    <h5>
+                        {% if expertise.status_request == 'Создана' %}
+                        <span class="badge text-bg-secondary">{{ expertise.status_request }}</span>
+                        {% elif expertise.status_request == 'В работе' %}
+                        <span class="badge text-bg-warning">{{ expertise.status_request }}</span>
+                        {% elif expertise.status_request == 'Отклонена' %}
+                        <span class="badge text-bg-danger">{{ expertise.status_request }}</span>
+                        {% elif expertise.status_request == 'Выполнена' %}
+                        <span class="badge text-bg-success">{{ expertise.status_request }}</span>
+                        {% endif %}
+                    </h5>
+                </dd>
+
+            <dt class="col-sm-4">Ответственный за экспертизу :</dt>
+            <dd class="col-sm-8">{{ worker.position }} {{ worker.last_name }} {{ worker.first_name }} {{ worker.patronymic }}</dd>
+
+            <dt class="col-sm-4">Заявка на экспертизу :</dt>
+            <dd class="col-sm-8">
+                <a href="{{ url_for('request_worker', id=request.id) }}">#{{ entity.id }}. {{ entity.name }}</a>
+            </dd>
+
+            <dt class="col-sm-4">Ссылка на нормативные документы :</dt>
+            <dd class="col-sm-8">
+                {% if expertise.link_inference %}
+                <a href="{{ expertise.link_inference }}">Нормативные документы</a>
+                {% endif %}
+            </dd>
+
+            {% if expertise.link_inference %}
+            <dt class="col-sm-4">Нормативные документы :</dt>
+            <dd class="col-sm-8">
+
+            </dd>
+            {% endif %}
+
+            {% for security_requirement in security_requirements %}
+                {% if security_requirement.id == expertise.id_security_requirements %}
+            <dt class="col-sm-4">Требования безопасности :</dt>
+            <dd class="col-sm-8">
+                <a href="{{ url_for('static', filename=security_requirement.link_material) }}">{{ security_requirement.name }}</a>
+            </dd>
+
+                {% else %}
+            <dt class="col-sm-4">Требования безопасности :</dt>
+            <dd class="col-sm-8"></dd>
+                {% endif %}
+            {% endfor %}
+
+            {% for regulatory_document in regulatory_documents %}
+                {% if regulatory_document.id == expertise.id_regulatory_document %}
+            <dt class="col-sm-4">Нормативные документы :</dt>
+            <dd class="col-sm-8">
+                <a href="{{ url_for('static', filename=regulatory_document.link_material) }}">{{ regulatory_document.name }}</a>
+            </dd>
+
+            <dt class="col-sm-4">Описание нормативного документа :</dt>
+            <dd class="col-sm-8">{{ regulatory_document.description }}</dd>
+
+                {% else %}
+            <dt class="col-sm-4">Нормативные документы :</dt>
+            <dd class="col-sm-8"></dd>
+                {% endif %}
+            {% endfor %}
+
+            <dt class="col-sm-4">Распечатать заявку :</dt>
+            <dd class="col-sm-8">
+                <form action="{{ url_for('generate_pdf_expertise', id=expertise.id) }}" method="GET">
+                    <button type="submit" class="btn btn-outline-secondary">PDF</button>
+                </form>
+            </dd>
+
+            <div class="py-2">
+                <hr class="my-0">
+            </div>
+
+            <dd class="col-12">
+                <h4>Характеристики объекта</h4>
+            </dd>
+
+            {% for attribute in attribute_entities %}
+            <dt class="col-sm-4">{{ attribute.name_attribute }} :</dt>
+            <dd class="col-sm-8">{{ attribute.description }}</dd>
+            {% endfor %}
+
+        </dl>
+
+        <p class="card-text"><small class="text-muted">Дата создания: {{expertise.date_create.strftime('%d.%m.%Y')}}</small></p>
+    
+    </div> 
+</div>
+
+<!-- Modal -->
+{% if  session.user_type == 'worker' %}
+<div class="modal fade" id="exampleModalUpdateExpertise" tabindex="-1" aria-labelledby="exampleModalLabel">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Изменить информацию для экспертизы</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="updateFormExpertise" method="POST" action="{{ url_for('update_expertise', id=expertise.id) }}" enctype="multipart/form-data">
+                    <input type="hidden" name="id" id="id" value="{{ expertise.id }}">
+                    <div class="mb-3">
+                        <label for="exampleSelectUpdateExpertiseStatus" class="form-label">Выберите статус экспертизы</label>
+                        <select class="form-select" name="exampleSelectUpdateExpertiseStatus" id="exampleSelectUpdateExpertiseStatus" aria-label="Выбирите статус экспертизы" aria-describedby="expertiseStatusHelp">
+                            <option value="{{expertise.status_request}}" selected>{{expertise.status_request}}</option>
+                            <option value="Создана">Создана</option>
+                            <option value="В работе">В работе</option>
+                            <option value="Отклонена">Отклонена</option>
+                            <option value="Выполнена">Выполнена</option>
+                        </select>                     
+                        <div id="expertiseStatusHelp" class="form-text">Выберите статус экспертизы.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="exampleSelectUpdateWorker" class="form-label">Переназначить ответственного</label>
+                        <select class="form-select" name="exampleSelectUpdateWorker" id="exampleSelectUpdateWorker" aria-label="Выбирите отетственного за экспертизу" aria-describedby="workerHelp">
+                            {% for worker in workers %}
+                                {% if expertise.id_worker == worker.id %}
+                            <option value="{{worker.id}}" selected>{{ worker.position }} {{ worker.last_name }} {{ worker.first_name }} {{ worker.patronymic }}</option>
+                                {% else %}
+                            <option value="{{worker.id}}">{{ worker.position }} {{ worker.last_name }} {{ worker.first_name }} {{ worker.patronymic }}</option> 
+                                {% endif %}
+                            {% endfor %}
+                        </select>                     
+                        <div id="workerHelp" class="form-text">Переназначьте ответственного за экспертизу.</div>
+                    </div>
+
+                    <div class="mb-3">
+                      <label for="exampleUpdateLinkInference" class="form-label">Введите ссылку на нормативную документацию</label>
+                        <input type="text" class="form-control" name="exampleUpdateLinkInference" id="exampleUpdateLinkInference" aria-describedby="linkInferenceHelp" value="{{ expertise.link_inference }}">
+                        <div id="linkInferenceHelp" class="form-text">Введите ссылку на нормативную документацию.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="exampleSelectUpdateSecurityRequirements" class="form-label">Документация с требованиями безопасности</label>
+                        <select class="form-select" name="exampleSelectUpdateSecurityRequirements" id="exampleSelectUpdateSecurityRequirements" aria-label="Выбирите документацию с нормативами" aria-describedby="securityRequirementsHelp">
+                        {% for security_requirement in security_requirements %}
+                            {% if security_requirement.id == expertise.id_security_requirements %}
+                            <option value="{{ security_requirement.id }}" selected>{{ security_requirement.name }}</option>
+                            {% else %}
+                            <option value="{{ security_requirement.id }}">{{ security_requirement.name }}</option>
+                            {% endif %}
+                        {% endfor %}
+                            <option value="">Нет</option>
+                        </select>                     
+                        <div id="securityRequirementsHelp" class="form-text">Выберите нужную документацию с требованиями безопасности.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="exampleSelectUpdateRegulatoryDocuments" class="form-label">Документация с нормативами</label>
+                        <select class="form-select" name="exampleSelectUpdateRegulatoryDocuments" id="exampleSelectUpdateRegulatoryDocuments" aria-label="Выбирите документацию с требованиями безопасности" aria-describedby="regulatoryDocumentHelp">
+                        {% for regulatory_document in regulatory_documents %}
+                            {% if regulatory_document.id == expertise.id_regulatory_document %}
+                            <option value="{{ regulatory_document.id }}" selected>{{ regulatory_document.name }}</option>
+                            {% else %}
+                            <option value="{{ regulatory_document.id }}">{{ regulatory_document.name }}</option>
+                            {% endif %}
+                        {% endfor %}
+                            <option value="">Нет</option>
+                        </select>                     
+                        <div id="regulatoryDocumentHelp" class="form-text">Выберите нужную документацию с нормативами.</div>
+                  </div>
+
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-primary">Изменить</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+
+{% endblock %}
+
+{% block content %}
+
+{% endblock %}
+
+{% block script %}
+
+{% endblock %}
