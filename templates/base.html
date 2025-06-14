@@ -23,20 +23,13 @@
                 <a class="nav-link active" aria-current="page" href="{{ url_for('my_organization', login=current_user.login) }}">Организации</a>
                 {% endif %}
               </li>
+
               {% if  session.user_type == 'customer' %}
               <li class="nav-item">
                 <a class="nav-link" href="{{ url_for('entities') }}">Объекты</a>
               </li>
-              {% endif %}  
-              <li class="nav-item">
-                {% if  session.user_type == 'worker' %}
-                <a class="nav-link" href="{{ url_for('expertises') }}">Экспертизы</a>
-                {% endif %}
+              {% endif %}
 
-                {% if session.user_type == 'customer' %}
-                <a class="nav-link" href="{{ url_for('myexpertises') }}">Экспертизы</a>
-                {% endif %}
-              </li>
               <li class="nav-item">
                 {% if  session.user_type == 'customer' %}
                 <a class="nav-link" href="{{ url_for('requests') }}">Заявки</a>
@@ -46,6 +39,17 @@
                 <a class="nav-link" href="{{ url_for('requests_worker') }}">Заявки</a>
                 {% endif %}
               </li>
+
+              <li class="nav-item">
+                {% if  session.user_type == 'worker' %}
+                <a class="nav-link" href="{{ url_for('expertises') }}">Экспертизы</a>
+                {% endif %}
+
+                {% if session.user_type == 'customer' %}
+                <a class="nav-link" href="{{ url_for('myexpertises') }}">Экспертизы</a>
+                {% endif %}
+              </li>
+
             </ul>
             <ul class="navbar-nav mb-2 mb-lg-0 ms-md-auto">
               <li class="nav-item">

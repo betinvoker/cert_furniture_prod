@@ -473,8 +473,17 @@ def myrequest(id):
     organization_ids = [org.id for org in organizations]
     entities = Entity.query.filter(Entity.id_organization.in_(organization_ids)).filter(Entity.status!='D').all()
     attributes_entity = Attribute_entity.query.filter(Attribute_entity.id_entity==myrequest.id_entity).filter(Attribute_entity.status!='D').all()
-    
-    return render_template('request.html', organizations=organizations, entities=entities, request=myrequest, banks=banks, worker=worker, attributes=attributes_entity)
+
+    data = {
+        'organizations': organizations
+        ,'entities': entities
+        ,'request': myrequest
+        ,'banks': banks
+        ,'worker': worker
+        ,'attributes': attributes_entity
+    }
+
+    return render_template('request.html', **data)
 
 @app.route('/request/update/<int:id>', methods=['POST'])
 def update_request(id):
@@ -631,8 +640,19 @@ def request_worker(id):
     worker = Worker.query.get(req.id_worker)
     bank = Bank.query.filter(Bank.id==req.id_bank, Bank.status!='D').all()
     attributes_entity = Attribute_entity.query.filter(Attribute_entity.id_entity==req.id_entity, Attribute_entity.status!='D').all()
-    
-    return render_template('request.html', organization=organization, entity=entity, request=req, worker=worker, bank=bank, attributes=attributes_entity)
+    expertise = Expertise.query.filter(Expertise.id_request==req.id, Expertise.status!='D').first()
+
+    data = {
+        'organization': organization
+        ,'entity': entity
+        ,'request': req
+        ,'bank': bank
+        ,'worker': worker
+        ,'attributes': attributes_entity
+        ,'expertise' : expertise
+    }
+
+    return render_template('request.html', **data)
 
 @app.route('/all_requests/request/update/<int:id>', methods=['POST'])
 def accept_request(id):
@@ -821,10 +841,10 @@ def myexpertises():
     organizations = Organization.query.filter(Organization.id_client==customer.id, Organization.status!='D').all()
     
     entities_ids = [org.id for org in organizations]
-    entities = Entity.query.filter(Entity.id.in_(entities_ids), Entity.status!='D').all()
+    entities = Entity.query.filter(Entity.id_organization.in_(entities_ids), Entity.status!='D').all()
 
     requests_ids = [ent.id for ent in entities]
-    requests = Request.query.filter(Request.id.in_(requests_ids), Request.status!='D').all()
+    requests = Request.query.filter(Request.id_entity.in_(requests_ids), Request.status!='D').all()
 
     expertises_ids = [req.id for req in requests]
     query = Expertise.query.filter(Expertise.id_request.in_(expertises_ids), Expertise.status!='D')
@@ -848,6 +868,23 @@ def myexpertises():
     }
 
     return render_template('myexpertises.html', **data)
+
+@app.route('/expertise/add_expertise/<int:id>', methods=['POST'])
+def add_expertise(id):
+    worker = Worker.query.filter_by(login=flask_session['login']).first()
+    request = Request.query.get_or_404(id)
+
+    try:
+        new_expertise = Expertise(id_worker = worker.id, id_request = request.id)
+
+        db.session.add(new_expertise)
+        db.session.commit()
+
+        flash("Экспертиза добавлена!")
+        return redirect(url_for('request_worker', id=request.id))
+    except Exception as e:
+        db.session.rollback()
+        return f"Ошибка записи: {e}", 500
 
 if __name__ == "__main__":
     app.run(debug=True)

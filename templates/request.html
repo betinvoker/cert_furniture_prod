@@ -26,6 +26,16 @@
                     {% endif %}
                 </form>
             </div>
+
+            
+                {% if session.login == worker.login and expertise == None %}
+            <div class="col-sm-2 col-md-2 col-lg-2">
+                <form action="{{ url_for('add_expertise', id=request.id) }}" method="POST">
+                    <button type="submit" class="btn btn-outline-primary">Создать экспертизу</button>
+                </form>
+            </div>
+                {% endif %}
+            
             <div class="col-sm-2 col-md-2 col-lg-2">
                 <button type="button" class="btn btn-outline-success open-modal" data-bs-toggle="modal" data-bs-target="#exampleModalUpdateRequest" name="btnUpdateRequest">Изменить стутус</button>
             </div>
