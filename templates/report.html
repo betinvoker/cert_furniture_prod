@@ -46,6 +46,18 @@
             <td>email: {{ customer.email }}</td>
             <td></td>
         </tr>
+        <tr>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <th>ID экспертиз</th>
+            <td>
+                {% for expertise in expertises%}
+                {{ expertise.id }},
+                {% endfor %}
+            </td>
+        </tr>
     </table>
 
     <table>

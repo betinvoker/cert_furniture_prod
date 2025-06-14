@@ -467,12 +467,13 @@ def myrequest(id):
         return redirect(url_for('login'))
     
     myrequest = Request.query.get(id)
-    organizations = Organization.query.filter_by(id_client=customer.id).filter(Organization.status!='D').all()
+    organizations = Organization.query.filter(Organization.id_client==customer.id, Organization.status!='D').all()
     banks = Bank.query.filter(Bank.status!='D').all()
     worker = Worker.query.get(myrequest.id_worker)
     organization_ids = [org.id for org in organizations]
-    entities = Entity.query.filter(Entity.id_organization.in_(organization_ids)).filter(Entity.status!='D').all()
-    attributes_entity = Attribute_entity.query.filter(Attribute_entity.id_entity==myrequest.id_entity).filter(Attribute_entity.status!='D').all()
+    entities = Entity.query.filter(Entity.id_organization.in_(organization_ids), Entity.status!='D').all()
+    attributes_entity = Attribute_entity.query.filter(Attribute_entity.id_entity==myrequest.id_entity, Attribute_entity.status!='D').all()
+    expertises = Expertise.query.filter(Expertise.id_request==myrequest.id, Expertise.status!='D').all()
 
     data = {
         'organizations': organizations
@@ -481,6 +482,7 @@ def myrequest(id):
         ,'banks': banks
         ,'worker': worker
         ,'attributes': attributes_entity
+        ,'expertises': expertises
     }
 
     return render_template('request.html', **data)
@@ -548,6 +550,7 @@ def generate_pdf_request(id):
         customer = db.session.get(Customer, organization.id_client)
         worker = db.session.get(Worker, myrequest.id_worker) if myrequest.id_worker else None
         attributes = Attribute_entity.query.filter(Attribute_entity.id_entity==entity.id, Attribute_entity.status != 'D').all()
+        expertises = Expertise.query.filter(Expertise.id_request==myrequest.id, Expertise.status!='D').all()
 
         template_context = {
             'request_obj': myrequest
@@ -557,6 +560,7 @@ def generate_pdf_request(id):
             ,'bank': bank
             ,'worker': worker
             ,'attrs': attributes
+            ,'expertises': expertises
             ,'creation_date': myrequest.date_create
             ,'title': f'#{myrequest.id}. Заявка на экспертизу {entity.name}'
         }
@@ -640,7 +644,7 @@ def request_worker(id):
     worker = Worker.query.get(req.id_worker)
     bank = Bank.query.filter(Bank.id==req.id_bank, Bank.status!='D').all()
     attributes_entity = Attribute_entity.query.filter(Attribute_entity.id_entity==req.id_entity, Attribute_entity.status!='D').all()
-    expertise = Expertise.query.filter(Expertise.id_request==req.id, Expertise.status!='D').first()
+    expertises = Expertise.query.filter(Expertise.id_request==req.id, Expertise.status!='D').all()
 
     data = {
         'organization': organization
@@ -649,7 +653,7 @@ def request_worker(id):
         ,'bank': bank
         ,'worker': worker
         ,'attributes': attributes_entity
-        ,'expertise' : expertise
+        ,'expertises' : expertises
     }
 
     return render_template('request.html', **data)

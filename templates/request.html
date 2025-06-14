@@ -28,7 +28,7 @@
             </div>
 
             
-                {% if session.login == worker.login and expertise == None %}
+                {% if session.login == worker.login %}
             <div class="col-sm-2 col-md-2 col-lg-2">
                 <form action="{{ url_for('add_expertise', id=request.id) }}" method="POST">
                     <button type="submit" class="btn btn-outline-primary">Создать экспертизу</button>
@@ -81,6 +81,15 @@
 
                 <dt class="col-sm-4">Ответственный эксперт :</dt>
                 <dd class="col-sm-8">{{worker.position}} {{worker.last_name}} {{worker.first_name}} {{worker.patronymic}}</dd>
+
+                {% if expertises %}
+                <dt class="col-sm-4">ID экспертиз :</dt>
+                <dd class="col-sm-8">
+                    {% for expertise in expertises %}
+                        {{ expertise.id }},
+                    {% endfor %}
+                </dd>
+                {% endif %}
 
                 <dt class="col-sm-4">ОКВЭД :</dt>
                 <dd class="col-sm-8">{{request.okved}}</dd>
@@ -143,6 +152,15 @@
 
                 <dt class="col-sm-4">Ответственный эксперт :</dt>
                 <dd class="col-sm-8">{{worker.position}} {{worker.last_name}} {{worker.first_name}} {{worker.patronymic}}</dd>
+
+                {% if expertises %}
+                <dt class="col-sm-4">ID экспертиз :</dt>
+                <dd class="col-sm-8">
+                    {% for expertise in expertises %}
+                        {{ expertise.id }},
+                    {% endfor %}
+                </dd>
+                {% endif %}
 
                 <dt class="col-sm-4">ОКВЭД :</dt>
                 <dd class="col-sm-8">{{request.okved}}</dd>
